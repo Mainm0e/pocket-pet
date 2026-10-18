@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tamagot seed gallery</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes tgBob{0%,100%{transform:translateY(0) scale(1,1)}45%{transform:translateY(-6px) scale(0.98,1.02)}90%{transform:translateY(0) scale(1.03,0.97)}}
+.tg-bob{animation:tgBob 2.8s ease-in-out infinite;transform-origin:50% 100%}
+</style>
+</helmet>
+<div style="width: 1280px; height: 770px; box-sizing: border-box; padding: 48px 56px; display: flex; flex-direction: column; gap: 28px; background: #EFF1F5; font-family: 'Fredoka', system-ui, sans-serif; color: #1B1D2A">
+<div style="display: flex; justify-content: space-between; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.14em; color: #5A5F78">SEED GALLERY</div>
+<h2 style="margin: 0; font-size: 44px; line-height: 1.05; font-weight: 700">Eight seeds, eight tamagots</h2>
+</div>
+<div style="max-width: 360px; font-size: 15px; line-height: 1.45; color: #3D4157">Every pet below is drawn live from its seed text. Type the same seed into the Hatchery and the same pet hatches.</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; flex: 1">
+<sc-for list="{{pets}}" as="p" hint-placeholder-count="8">
+<div style="border-radius: 26px; background: #FFFFFF; padding: 14px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 10px 24px rgba(40,30,80,0.06)">
+<div class="tg-bob" style="height: 150px; display: flex; align-items: flex-end">
+<dc-import name="Pet" seed="{{p.seed}}" size="{{petSize}}" hint-size="150px,150px"></dc-import>
+</div>
+<div style="font-size: 22px; font-weight: 600">{{p.name}}</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<span style="padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: {{p.bg}}; color: {{p.ink}}">{{p.tier}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5A5F78">{{p.seed}}</span>
+</div>
+<div style="font-size: 14px; font-weight: 500; color: {{p.uink}}">{{p.unique}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":770}}'>
+var GENES=[
+{key:'body',name:'Body',alleles:[['mochi','Mochi',35],['bean','Bean',25],['pudding','Pudding',25],['drop','Droplet',15]]},
+{key:'hue',name:'Color',alleles:[['#FFB59A','Peach',18],['#93E2BE','Mint',18],['#98C6FF','Sky',16],['#C7B0FF','Lilac',16],['#FFE07A','Lemon',12],['#FFA3C2','Rose',12],['#C99E82','Cocoa',6],['#6C78E0','Midnight',2]]},
+{key:'ears',name:'Top',alleles:[['none','Bare',20],['cat','Cat ears',22],['bunny','Bunny ears',20],['antenna','Antenna',16],['sprout','Sprout',14],['horns','Tiny horns',8]]},
+{key:'eyes',name:'Eyes',alleles:[['dot','Dot',30],['sparkle','Sparkle',28],['sleepy','Sleepy',18],['wink','Wink',16],['star','Star',8]]},
+{key:'mouth',name:'Mouth',alleles:[['smile','Smile',35],['cat','Kitty',25],['open','Gasp',20],['tongue','Bleh',20]]},
+{key:'cheeks',name:'Cheeks',alleles:[['blush','Blush',50],['freckles','Freckles',30],['none','Plain',20]]},
+{key:'pattern',name:'Pattern',alleles:[['plain','Solid',40],['belly','Belly',30],['spots','Spots',20],['stripe','Stripes',10]]},
+{key:'aura',name:'Charm',alleles:[['none','None',55],['bow','Bow',25],['crown','Crown',15],['halo','Halo',5]]},
+{key:'temper',name:'Temper',alleles:[['playful','Playful',20],['sleepy','Dreamy',20],['curious','Curious',20],['brave','Brave',20],['shy','Shy',20]]}
+];
+var SYL=['Mo','Pi','Nu','Ki','Lu','Bo','Ta','Fi','Zu','Po','Mi','Ru','Ko','Yu','Chi','Pa'];
+var SUF=['','chi','po','n','ko','mi'];
+function tgHash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function tgRng(a){return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function tgDecode(seed){
+var norm=String(seed==null?'':seed).trim().toUpperCase();
+var h=tgHash(norm);var r=tgRng(h);var B='ATGC';
+var name=SYL[Math.floor(r()*16)]+SYL[Math.floor(r()*16)].toLowerCase()+SUF[Math.floor(r()*6)];
+var genes={},list=[],pts=0;
+GENES.forEach(function(g){var x=r()*100,acc=0,idx=g.alleles.length-1;
+for(var i=0;i<g.alleles.length;i++){acc+=g.alleles[i][2];if(x<acc){idx=i;break;}}
+var a=g.alleles[idx],w=a[2],p=w<=5?4:w<=8?3:w<=12?2:w<=16?1:0;pts+=p;genes[g.key]=a[0];
+list.push({key:g.key,gene:g.name,value:a[0],label:a[1],odds:w+'%',points:p,codon:B[(idx>>2)&3]+B[idx&3]});});
+var stats={appetite:3+Math.floor(r()*8),energy:3+Math.floor(r()*8),charm:3+Math.floor(r()*8)};
+var UQ=[['tail','Tail',45,[['tail_fluffy','Fluffy tail',50],['tail_curly','Curly tail',30],['tail_bolt','Lightning tail',15],['tail_flame','Flame tail',5]]],['wing','Wings',35,[['wing_feather','Feather wings',50],['wing_bat','Bat wings',30],['wing_butterfly','Butterfly wings',15],['wing_angel','Angel wings',5]]],['ear','Mystic ears',20,[['ear_fox','Fox ears',50],['ear_elf','Elf ears',30],['ear_crystal','Crystal horns',15],['ear_unicorn','Unicorn horn',5]]]];
+var u1=r()*100,u2=r()*100,u3=r()*100,uq={value:'none',slot:'none',slotLabel:'None',label:'No unique part',chance:'60%',slotOdds:'',varOdds:'',points:0,idx:0};
+if(u1<40){var si=UQ.length-1,acc2=0;for(var j=0;j<UQ.length;j++){acc2+=UQ[j][2];if(u2<acc2){si=j;break;}}
+var S=UQ[si],vi=S[3].length-1,acc3=0;for(var k=0;k<S[3].length;k++){acc3+=S[3][k][2];if(u3<acc3){vi=k;break;}}
+var pc=40*S[2]*S[3][vi][2]/10000,up=pc<=1?5:pc<=3?4:pc<=6?3:pc<=12?2:1;
+uq={value:S[3][vi][0],slot:S[0],slotLabel:S[1],label:S[3][vi][1],chance:(Math.round(pc*10)/10)+'%',slotOdds:S[2]+'%',varOdds:S[3][vi][2]+'%',points:up,idx:si*4+vi+1};pts+=up;}
+genes.unique=uq.value;
+list.push({key:'unique',gene:'Unique',value:uq.value,label:uq.slot==='none'?'None':uq.label,odds:uq.chance,points:uq.points,codon:B[(uq.idx>>2)&3]+B[uq.idx&3]});
+var tier=pts>=13?'Legendary':pts>=10?'Epic':pts>=7?'Rare':pts>=4?'Uncommon':'Common';
+return {norm:norm,hash:h,hex:('00000000'+h.toString(16)).slice(-8).toUpperCase(),name:name,genes:genes,list:list,dna:list.map(function(c){return c.codon;}).join(''),points:pts,tier:tier,stats:stats,unique:uq};
+}
+var TIERS={Common:['#E3E6EE','#2B2F42'],Uncommon:['#CDEFD9','#1E5B3A'],Rare:['#D3E2FF','#1F3E8A'],Epic:['#E6D6FF','#4A2390'],Legendary:['#FFE39A','#6B4500']};
+var SEEDS=['MOCHI-001','LUNA-7F3A','PIXEL-42','HELSINKI','BOBA-TEA','STARDUST','KIWI-0909','NOVA-1'];
+class Component extends DCLogic {
+renderVals() {
+return {
+petSize:150,
+pets:SEEDS.map(function(s){var d=tgDecode(s);var t=TIERS[d.tier];return {seed:s,name:d.name,tier:d.tier,bg:t[0],ink:t[1],unique:d.unique.slot==='none'?'No unique part':d.unique.label+' · '+d.unique.chance,uink:d.unique.slot==='none'?'#8A8FA8':'#4B3FD1'};})
+};
+}
+}
+</script>
+</body>
+</html>

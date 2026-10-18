@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tamagot Hatchery</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#4B3FD1}a:hover{color:#2F2699}
+@keyframes tgBob{0%,100%{transform:translateY(0) scale(1,1)}45%{transform:translateY(-10px) scale(0.98,1.02)}90%{transform:translateY(0) scale(1.03,0.97)}}
+.tg-bob{animation:tgBob 2.6s ease-in-out infinite;transform-origin:50% 100%}
+.tg-lcd{background-color:#E6F2EA;background-image:radial-gradient(rgba(40,70,55,0.10) 1px,transparent 1.2px);background-size:10px 10px}
+.tg-btn{transition:transform .12s ease, box-shadow .12s ease}
+.tg-btn:hover{transform:translateY(-2px)}
+.tg-btn:active{transform:translateY(2px)}
+.tg-input:focus{outline:3px solid #7C8CFF;outline-offset:2px}
+.tg-ghost:hover{background:#E4E7F2}
+</style>
+</helmet>
+<div style="width: 1280px; height: 980px; box-sizing: border-box; padding: 48px 56px; display: flex; gap: 56px; background: #EFF1F5; font-family: 'Fredoka', system-ui, sans-serif; color: #1B1D2A">
+
+<div style="width: 500px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px">
+<div style="width: 460px; height: 620px; border-radius: 50% 50% 47% 47% / 56% 56% 44% 44%; background: {{shell}}; box-shadow: inset -22px -30px 50px rgba(40,20,70,0.12), inset 18px 22px 36px rgba(255,255,255,0.75), 0 36px 70px rgba(40,30,80,0.20); display: flex; flex-direction: column; align-items: center; padding-top: 92px; box-sizing: border-box; gap: 22px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.32em; font-weight: 600; color: rgba(27,29,42,0.6)">TAMAGOT</div>
+<div class="tg-lcd" style="width: 316px; height: 300px; border-radius: 40px; border: 10px solid rgba(255,255,255,0.7); box-shadow: inset 0 6px 18px rgba(30,50,40,0.18), 0 2px 0 rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box">
+<div class="tg-bob">
+<dc-import name="Pet" seed="{{seed}}" size="{{petSize}}" hint-size="220px,220px"></dc-import>
+</div>
+<div style="font-size: 15px; font-weight: 500; color: #2E4A3C">{{mood}}</div>
+</div>
+<div style="display: flex; gap: 26px; margin-top: 6px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+<button class="tg-btn" aria-label="Feed" onClick="{{feed}}" style="width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer; background: #FF8A65; color: #2A1A12; box-shadow: inset -4px -6px 10px rgba(0,0,0,0.15), inset 4px 4px 8px rgba(255,255,255,0.5), 0 6px 0 #D9694A; display: flex; align-items: center; justify-content: center">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18"></path><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M9 7c0-1.5 1-1.5 1-3"></path><path d="M14 7c0-1.5 1-1.5 1-3"></path></svg>
+</button>
+<span style="font-size: 14px; font-weight: 600; color: rgba(27,29,42,0.75)">Feed</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+<button class="tg-btn" aria-label="Play" onClick="{{play}}" style="width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer; background: #8C99FF; color: #15183A; box-shadow: inset -4px -6px 10px rgba(0,0,0,0.15), inset 4px 4px 8px rgba(255,255,255,0.5), 0 6px 0 #6371D9; display: flex; align-items: center; justify-content: center">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c3.5 3.5 3.5 14.5 0 18"></path><path d="M12 3c-3.5 3.5-3.5 14.5 0 18"></path></svg>
+</button>
+<span style="font-size: 14px; font-weight: 600; color: rgba(27,29,42,0.75)">Play</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+<button class="tg-btn" aria-label="Nap" onClick="{{nap}}" style="width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer; background: #5FCDA9; color: #0F2E24; box-shadow: inset -4px -6px 10px rgba(0,0,0,0.15), inset 4px 4px 8px rgba(255,255,255,0.5), 0 6px 0 #3FA686; display: flex; align-items: center; justify-content: center">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"></path></svg>
+</button>
+<span style="font-size: 14px; font-weight: 600; color: rgba(27,29,42,0.75)">Nap</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 26px; justify-content: center">
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.14em; color: #5A5F78">HATCHERY · GEN 1</div>
+<h1 style="margin: 0; font-size: 68px; line-height: 1; font-weight: 700; letter-spacing: -0.01em">{{d.name}}</h1>
+<div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
+<span style="padding: 6px 14px; border-radius: 999px; font-size: 15px; font-weight: 600; background: {{tierBg}}; color: {{tierInk}}">{{d.tier}} · {{d.points}} pts</span>
+<span style="padding: 6px 14px; border-radius: 999px; font-size: 15px; font-weight: 500; background: #FFFFFF; color: #1B1D2A">{{temper}} temper</span>
+<span style="padding: 6px 14px; border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #FFFFFF; color: #3D4157">hash 0x{{d.hex}}</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label for="tg-seed" style="font-size: 15px; font-weight: 600">Seed</label>
+<div style="display: flex; gap: 12px">
+<input id="tg-seed" class="tg-input" type="text" value="{{seed}}" onChange="{{onSeed}}" style="flex: 1; min-width: 0; height: 54px; box-sizing: border-box; padding: 0 18px; border-radius: 16px; border: 2px solid #D4D8E6; background: #FFFFFF; font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; letter-spacing: 0.04em; color: #1B1D2A">
+<button class="tg-ghost" onClick="{{roll}}" style="height: 54px; padding: 0 20px; border-radius: 16px; border: 2px solid #D4D8E6; background: #FFFFFF; cursor: pointer; display: flex; align-items: center; gap: 10px; font-family: 'Fredoka', system-ui, sans-serif; font-size: 16px; font-weight: 600; color: #1B1D2A">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"></circle><circle cx="12" cy="12" r="1.3" fill="currentColor"></circle><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"></circle></svg>
+Random seed
+</button>
+</div>
+<div style="font-size: 14px; color: #5A5F78">Type anything — your name, a date, a secret word. The same seed always hatches the same tamagot.</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<div style="font-size: 15px; font-weight: 600">DNA strand</div>
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5A5F78">10 genes · 20 bases</div>
+</div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<sc-for list="{{codons}}" as="cd" hint-placeholder-count="10">
+<div style="display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: #FFFFFF">
+<span style="width: 22px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: #1B1D2A; background: {{cd.c1}}">{{cd.b1}}</span>
+<span style="width: 22px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: #1B1D2A; background: {{cd.c2}}">{{cd.b2}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{genes}}" as="gn" hint-placeholder-count="9">
+<div style="padding: 10px 14px; border-radius: 16px; background: {{gn.bg}}; display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 12px; font-weight: 500; color: #5A5F78; text-transform: uppercase; letter-spacing: 0.08em">{{gn.gene}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: #3D4157">{{gn.codon}}</span>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 18px; font-weight: 600">{{gn.label}}</span>
+<span style="font-size: 12px; color: #5A5F78">{{gn.odds}}{{gn.bonus}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="padding: 14px 18px; border-radius: 18px; background: {{uq.bg}}; display: flex; align-items: center; gap: 16px">
+<div style="width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: {{uq.ink}}">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2Z"></path><path d="M19 3v4M17 5h4"></path></svg>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 12px; font-weight: 500; color: {{uq.ink}}; text-transform: uppercase; letter-spacing: 0.08em">Unique part · gene 10</span>
+<span style="font-size: 20px; font-weight: 600; color: #1B1D2A">{{uq.title}}</span>
+<span style="font-size: 13px; color: #3D4157">{{uq.sub}}</span>
+</div>
+<span style="max-width: 190px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; color: {{uq.ink}}">{{uq.path}}</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="padding: 16px 18px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 15px; font-weight: 600">Born with</div>
+<sc-for list="{{stats}}" as="st" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 76px; font-size: 14px; color: #3D4157">{{st.label}}</span>
+<div style="display: flex; gap: 4px">
+<sc-for list="{{st.pips}}" as="pp" hint-placeholder-count="10">
+<span style="width: 12px; height: 12px; border-radius: 4px; background: {{pp.bg}}"></span>
+</sc-for>
+</div>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #3D4157">{{st.val}}</span>
+</div>
+</sc-for>
+</div>
+<div style="padding: 16px 18px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 15px; font-weight: 600">Right now</div>
+<sc-for list="{{meters}}" as="m" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 70px; font-size: 14px; color: #3D4157">{{m.label}}</span>
+<div style="flex: 1; height: 12px; border-radius: 6px; background: #EDEFF5; overflow: hidden">
+<div style="height: 12px; border-radius: 6px; width: {{m.pct}}; background: {{m.fill}}"></div>
+</div>
+<span style="width: 36px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #3D4157">{{m.num}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"shell":{"editor":"color","default":"#FFD3DF","options":["#FFD3DF","#CFE4FF","#D3F2DD","#FFE7A8"]},"$preview":{"width":1280,"height":980}}'>
+var GENES=[
+{key:'body',name:'Body',alleles:[['mochi','Mochi',35],['bean','Bean',25],['pudding','Pudding',25],['drop','Droplet',15]]},
+{key:'hue',name:'Color',alleles:[['#FFB59A','Peach',18],['#93E2BE','Mint',18],['#98C6FF','Sky',16],['#C7B0FF','Lilac',16],['#FFE07A','Lemon',12],['#FFA3C2','Rose',12],['#C99E82','Cocoa',6],['#6C78E0','Midnight',2]]},
+{key:'ears',name:'Top',alleles:[['none','Bare',20],['cat','Cat ears',22],['bunny','Bunny ears',20],['antenna','Antenna',16],['sprout','Sprout',14],['horns','Tiny horns',8]]},
+{key:'eyes',name:'Eyes',alleles:[['dot','Dot',30],['sparkle','Sparkle',28],['sleepy','Sleepy',18],['wink','Wink',16],['star','Star',8]]},
+{key:'mouth',name:'Mouth',alleles:[['smile','Smile',35],['cat','Kitty',25],['open','Gasp',20],['tongue','Bleh',20]]},
+{key:'cheeks',name:'Cheeks',alleles:[['blush','Blush',50],['freckles','Freckles',30],['none','Plain',20]]},
+{key:'pattern',name:'Pattern',alleles:[['plain','Solid',40],['belly','Belly',30],['spots','Spots',20],['stripe','Stripes',10]]},
+{key:'aura',name:'Charm',alleles:[['none','None',55],['bow','Bow',25],['crown','Crown',15],['halo','Halo',5]]},
+{key:'temper',name:'Temper',alleles:[['playful','Playful',20],['sleepy','Dreamy',20],['curious','Curious',20],['brave','Brave',20],['shy','Shy',20]]}
+];
+var SYL=['Mo','Pi','Nu','Ki','Lu','Bo','Ta','Fi','Zu','Po','Mi','Ru','Ko','Yu','Chi','Pa'];
+var SUF=['','chi','po','n','ko','mi'];
+function tgHash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function tgRng(a){return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function tgDecode(seed){
+var norm=String(seed==null?'':seed).trim().toUpperCase();
+var h=tgHash(norm);var r=tgRng(h);var B='ATGC';
+var name=SYL[Math.floor(r()*16)]+SYL[Math.floor(r()*16)].toLowerCase()+SUF[Math.floor(r()*6)];
+var genes={},list=[],pts=0;
+GENES.forEach(function(g){var x=r()*100,acc=0,idx=g.alleles.length-1;
+for(var i=0;i<g.alleles.length;i++){acc+=g.alleles[i][2];if(x<acc){idx=i;break;}}
+var a=g.alleles[idx],w=a[2],p=w<=5?4:w<=8?3:w<=12?2:w<=16?1:0;pts+=p;genes[g.key]=a[0];
+list.push({key:g.key,gene:g.name,value:a[0],label:a[1],odds:w+'%',points:p,codon:B[(idx>>2)&3]+B[idx&3]});});
+var stats={appetite:3+Math.floor(r()*8),energy:3+Math.floor(r()*8),charm:3+Math.floor(r()*8)};
+var UQ=[['tail','Tail',45,[['tail_fluffy','Fluffy tail',50],['tail_curly','Curly tail',30],['tail_bolt','Lightning tail',15],['tail_flame','Flame tail',5]]],['wing','Wings',35,[['wing_feather','Feather wings',50],['wing_bat','Bat wings',30],['wing_butterfly','Butterfly wings',15],['wing_angel','Angel wings',5]]],['ear','Mystic ears',20,[['ear_fox','Fox ears',50],['ear_elf','Elf ears',30],['ear_crystal','Crystal horns',15],['ear_unicorn','Unicorn horn',5]]]];
+var u1=r()*100,u2=r()*100,u3=r()*100,uq={value:'none',slot:'none',slotLabel:'None',label:'No unique part',chance:'60%',slotOdds:'',varOdds:'',points:0,idx:0};
+if(u1<40){var si=UQ.length-1,acc2=0;for(var j=0;j<UQ.length;j++){acc2+=UQ[j][2];if(u2<acc2){si=j;break;}}
+var S=UQ[si],vi=S[3].length-1,acc3=0;for(var k=0;k<S[3].length;k++){acc3+=S[3][k][2];if(u3<acc3){vi=k;break;}}
+var pc=40*S[2]*S[3][vi][2]/10000,up=pc<=1?5:pc<=3?4:pc<=6?3:pc<=12?2:1;
+uq={value:S[3][vi][0],slot:S[0],slotLabel:S[1],label:S[3][vi][1],chance:(Math.round(pc*10)/10)+'%',slotOdds:S[2]+'%',varOdds:S[3][vi][2]+'%',points:up,idx:si*4+vi+1};pts+=up;}
+genes.unique=uq.value;
+list.push({key:'unique',gene:'Unique',value:uq.value,label:uq.slot==='none'?'None':uq.label,odds:uq.chance,points:uq.points,codon:B[(uq.idx>>2)&3]+B[uq.idx&3]});
+var tier=pts>=13?'Legendary':pts>=10?'Epic':pts>=7?'Rare':pts>=4?'Uncommon':'Common';
+return {norm:norm,hash:h,hex:('00000000'+h.toString(16)).slice(-8).toUpperCase(),name:name,genes:genes,list:list,dna:list.map(function(c){return c.codon;}).join(''),points:pts,tier:tier,stats:stats,unique:uq};
+}
+var BASE_COLORS={A:'#FFB199',T:'#9FE3C9',G:'#B9C2FF',C:'#FFE08A'};
+var TIERS={Common:['#E3E6EE','#2B2F42'],Uncommon:['#CDEFD9','#1E5B3A'],Rare:['#D3E2FF','#1F3E8A'],Epic:['#E6D6FF','#4A2390'],Legendary:['#FFE39A','#6B4500']};
+var MOODS={playful:'Wants to play tag!',sleepy:'Dreaming of clouds…',curious:'Sniffing the pixels.',brave:'Ready for adventure.',shy:'Peeking at you…'};
+function clamp(n){return Math.max(0,Math.min(100,n));}
+var UQ_BG={none:['#FFFFFF','#5A5F78'],tail:['#FFE3D6','#8A3A17'],wing:['#E3E7FF','#2F3A9E'],ear:['#DDF3E7','#1E5B3A']};
+function uqView(d){var u=d.unique;var c=UQ_BG[u.slot];
+if(u.slot==='none'){return {title:'No unique part',sub:'Missed the 40% roll. 6 in 10 tamagots hatch without one.',path:'roll 1 · miss',bg:c[0],ink:c[1]};}
+return {title:u.label,sub:'Only '+u.chance+' of all tamagots · +'+u.points+' rarity pts',path:'40% part → '+u.slotOdds+' '+u.slotLabel.toLowerCase()+' → '+u.varOdds+' this one',bg:c[0],ink:c[1]};}
+class Component extends DCLogic {
+constructor(props){super(props);this.state={seed:'MOCHI-001',hunger:72,joy:64,energy:80};}
+renderVals() {
+var self=this;var s=this.state;
+var d=tgDecode(s.seed);
+var tierC=TIERS[d.tier];
+var mood=s.hunger<30?'Tummy rumbling… feed me?':s.energy<30?'Yaaawn… nap time.':s.joy<30?'A bit bored. Play?':s.joy>88?'Bouncing with joy!':MOODS[d.genes.temper];
+var temperLabel='';d.list.forEach(function(x){if(x.key==='temper'){temperLabel=x.label;}});
+function pips(n){var out=[];for(var i=1;i<=10;i++){out.push({bg:i<=n?'#1B1D2A':'rgba(27,29,42,0.12)'});}return out;}
+return {
+shell:this.props.shell ?? '#FFD3DF',
+seed:s.seed,
+petSize:212,
+d:d,
+mood:mood,
+temper:temperLabel,
+tierBg:tierC[0],tierInk:tierC[1],
+codons:d.list.map(function(x){return {b1:x.codon[0],b2:x.codon[1],c1:BASE_COLORS[x.codon[0]],c2:BASE_COLORS[x.codon[1]]};}),
+genes:d.list.filter(function(x){return x.key!=='unique';}).map(function(x){var cov=x.key==='ears'&&d.unique.slot==='ear';return {gene:x.gene,label:cov?'Covered':x.label,codon:x.codon,odds:x.odds,bonus:x.points>0?' · +'+x.points:'',bg:cov?'#F1F2F6':x.points>=2?'#FFF1CC':'#FFFFFF'};}),
+uq:uqView(d),
+stats:[
+{label:'Appetite',val:d.stats.appetite,pips:pips(d.stats.appetite)},
+{label:'Stamina',val:d.stats.energy,pips:pips(d.stats.energy)},
+{label:'Charm',val:d.stats.charm,pips:pips(d.stats.charm)}
+],
+meters:[
+{label:'Fullness',num:s.hunger,pct:s.hunger+'%',fill:'#FF8A65'},
+{label:'Joy',num:s.joy,pct:s.joy+'%',fill:'#8C99FF'},
+{label:'Energy',num:s.energy,pct:s.energy+'%',fill:'#5FCDA9'}
+],
+onSeed:function(e){self.setState({seed:String(e.target.value).slice(0,24)});},
+roll:function(){var sy=SYL[Math.floor(Math.random()*SYL.length)].toUpperCase();var hx=Math.floor(Math.random()*65536).toString(16).toUpperCase();while(hx.length<4){hx='0'+hx;}self.setState({seed:sy+'-'+hx});},
+feed:function(){self.setState({hunger:clamp(s.hunger+24),energy:clamp(s.energy-4),joy:clamp(s.joy+4)});},
+play:function(){self.setState({joy:clamp(s.joy+22),energy:clamp(s.energy-14),hunger:clamp(s.hunger-10)});},
+nap:function(){self.setState({energy:clamp(s.energy+30),hunger:clamp(s.hunger-6),joy:clamp(s.joy-2)});}
+};
+}
+}
+</script>
+</body>
+</html>

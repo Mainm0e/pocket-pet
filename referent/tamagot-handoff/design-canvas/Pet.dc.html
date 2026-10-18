@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tamagot pet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: fit-content; line-height: 0; font-family: 'Fredoka', system-ui, sans-serif; color: #2A2238">
+<svg width="{{size}}" height="{{size}}" viewBox="0 0 240 240" role="img" aria-label="{{alt}}" style="display: block; overflow: visible">
+<defs>
+<radialGradient id="{{ids.body}}" cx="36%" cy="28%" r="78%">
+<stop offset="0" stop-color="{{c.light}}"></stop>
+<stop offset="0.52" stop-color="{{c.base}}"></stop>
+<stop offset="1" stop-color="{{c.shade}}"></stop>
+</radialGradient>
+<radialGradient id="{{ids.shadow}}" cx="50%" cy="50%" r="50%">
+<stop offset="0" stop-color="#1B1530" stop-opacity="0.34"></stop>
+<stop offset="1" stop-color="#1B1530" stop-opacity="0"></stop>
+</radialGradient>
+<radialGradient id="{{ids.spec}}" cx="50%" cy="50%" r="50%">
+<stop offset="0" stop-color="#FFFFFF" stop-opacity="0.9"></stop>
+<stop offset="1" stop-color="#FFFFFF" stop-opacity="0"></stop>
+</radialGradient>
+<clipPath id="{{ids.clip}}"><path d="{{bodyD}}"></path></clipPath>
+</defs>
+
+<ellipse cx="120" cy="214" rx="76" ry="11" fill="{{fills.shadow}}"></ellipse>
+
+<g display="{{v.u_tail_fluffy}}">
+<circle cx="192" cy="188" r="12" fill="{{c.base}}"></circle>
+<circle cx="206" cy="182" r="16" fill="{{fills.body}}"></circle>
+<circle cx="220" cy="168" r="13" fill="{{fills.body}}"></circle>
+<circle cx="214" cy="155" r="10" fill="{{c.light}}"></circle>
+</g>
+<g display="{{v.u_tail_curly}}">
+<path d="M178 188 C214 194 228 164 210 154 C197 147 191 165 204 169" fill="none" stroke="{{c.base}}" stroke-width="10" stroke-linecap="round"></path>
+</g>
+<g display="{{v.u_tail_bolt}}">
+<path d="M182 186 L212 172 L202 164 L230 140 L216 162 L226 166 L192 190 Z" fill="#FFC94A" stroke="#D99A1E" stroke-width="2.5" stroke-linejoin="round"></path>
+</g>
+<g display="{{v.u_tail_flame}}">
+<path d="M182 190 C198 180 206 170 204 154 C214 162 220 144 216 130 C234 146 238 172 222 188 C210 198 194 198 182 190 Z" fill="#FF7A45"></path>
+<path d="M196 190 C206 184 212 176 212 166 C220 174 222 184 214 190 C208 195 200 194 196 190 Z" fill="#FFD25A"></path>
+</g>
+<g display="{{v.u_wing_feather}}">
+<path d="M58 128 C30 128 14 110 20 92 C32 104 46 106 60 108 C50 114 52 122 58 128 Z" fill="#FFFFFF" stroke="#DCE0EE" stroke-width="2" stroke-linejoin="round"></path>
+<path d="M58 116 C40 114 30 104 30 94 C40 102 50 102 60 104 Z" fill="#EEF1FA"></path>
+<path d="M182 128 C210 128 226 110 220 92 C208 104 194 106 180 108 C190 114 188 122 182 128 Z" fill="#FFFFFF" stroke="#DCE0EE" stroke-width="2" stroke-linejoin="round"></path>
+<path d="M182 116 C200 114 210 104 210 94 C200 102 190 102 180 104 Z" fill="#EEF1FA"></path>
+</g>
+<g display="{{v.u_wing_bat}}">
+<path d="M58 120 L14 92 C18 108 14 118 8 124 C20 122 26 128 26 136 C34 130 42 132 46 140 C48 132 54 126 58 124 Z" fill="#4A3A6B" stroke="#33274D" stroke-width="2" stroke-linejoin="round"></path>
+<path d="M182 120 L226 92 C222 108 226 118 232 124 C220 122 214 128 214 136 C206 130 198 132 194 140 C192 132 186 126 182 124 Z" fill="#4A3A6B" stroke="#33274D" stroke-width="2" stroke-linejoin="round"></path>
+</g>
+<g display="{{v.u_wing_butterfly}}">
+<ellipse cx="38" cy="98" rx="22" ry="30" transform="rotate(-30 38 98)" fill="#FF9DD0" stroke="#E86BAE" stroke-width="2"></ellipse>
+<ellipse cx="42" cy="146" rx="15" ry="20" transform="rotate(20 42 146)" fill="#9FD8FF" stroke="#5DB3E8" stroke-width="2"></ellipse>
+<circle cx="34" cy="94" r="5" fill="#FFFFFF" opacity="0.8"></circle>
+<circle cx="40" cy="148" r="4" fill="#FFFFFF" opacity="0.8"></circle>
+<ellipse cx="202" cy="98" rx="22" ry="30" transform="rotate(30 202 98)" fill="#FF9DD0" stroke="#E86BAE" stroke-width="2"></ellipse>
+<ellipse cx="198" cy="146" rx="15" ry="20" transform="rotate(-20 198 146)" fill="#9FD8FF" stroke="#5DB3E8" stroke-width="2"></ellipse>
+<circle cx="206" cy="94" r="5" fill="#FFFFFF" opacity="0.8"></circle>
+<circle cx="200" cy="148" r="4" fill="#FFFFFF" opacity="0.8"></circle>
+</g>
+<g display="{{v.u_wing_angel}}">
+<ellipse cx="32" cy="140" rx="26" ry="10" transform="rotate(10 32 140)" fill="#FFF8E1" stroke="#FFD95A" stroke-width="2.5"></ellipse>
+<ellipse cx="30" cy="120" rx="32" ry="12" transform="rotate(-12 30 120)" fill="#FFF8E1" stroke="#FFD95A" stroke-width="2.5"></ellipse>
+<ellipse cx="38" cy="100" rx="34" ry="13" transform="rotate(-32 38 100)" fill="#FFF8E1" stroke="#FFD95A" stroke-width="2.5"></ellipse>
+<ellipse cx="208" cy="140" rx="26" ry="10" transform="rotate(-10 208 140)" fill="#FFF8E1" stroke="#FFD95A" stroke-width="2.5"></ellipse>
+<ellipse cx="210" cy="120" rx="32" ry="12" transform="rotate(12 210 120)" fill="#FFF8E1" stroke="#FFD95A" stroke-width="2.5"></ellipse>
+<ellipse cx="202" cy="100" rx="34" ry="13" transform="rotate(32 202 100)" fill="#FFF8E1" stroke="#FFD95A" stroke-width="2.5"></ellipse>
+</g>
+<g display="{{v.u_ear_elf}}">
+<path d="M50 132 C24 118 10 100 6 86 C26 94 42 104 58 112 Z" fill="{{fills.body}}" stroke="{{c.base}}" stroke-width="4" stroke-linejoin="round"></path>
+<path d="M44 124 C30 116 20 106 16 98 C30 104 40 110 50 116 Z" fill="#FF9DBA" opacity="0.6"></path>
+<path d="M190 132 C216 118 230 100 234 86 C214 94 198 104 182 112 Z" fill="{{fills.body}}" stroke="{{c.base}}" stroke-width="4" stroke-linejoin="round"></path>
+<path d="M196 124 C210 116 220 106 224 98 C210 104 200 110 190 116 Z" fill="#FF9DBA" opacity="0.6"></path>
+</g>
+
+<g transform="{{topT}}">
+<g display="{{v.u_ear_fox}}">
+<path d="M64 102 L68 26 L118 70 Z" fill="{{fills.body}}" stroke="{{c.base}}" stroke-width="10" stroke-linejoin="round"></path>
+<path d="M176 102 L172 26 L122 70 Z" fill="{{fills.body}}" stroke="{{c.base}}" stroke-width="10" stroke-linejoin="round"></path>
+<path d="M76 88 L77 48 L104 70 Z" fill="#FFF3EA" opacity="0.85"></path>
+<path d="M164 88 L163 48 L136 70 Z" fill="#FFF3EA" opacity="0.85"></path>
+<path d="M68 26 L64 46 L80 38 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round"></path>
+<path d="M172 26 L176 46 L160 38 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round"></path>
+</g>
+<g display="{{v.u_ear_crystal}}">
+<path d="M90 80 L96 26 L114 72 Z" fill="#A8E6FF" stroke="#4FA9D6" stroke-width="2.5" stroke-linejoin="round"></path>
+<path d="M96 26 L102 76" fill="none" stroke="#E6F8FF" stroke-width="2"></path>
+<path d="M150 80 L144 26 L126 72 Z" fill="#A8E6FF" stroke="#4FA9D6" stroke-width="2.5" stroke-linejoin="round"></path>
+<path d="M144 26 L138 76" fill="none" stroke="#E6F8FF" stroke-width="2"></path>
+</g>
+<g display="{{v.u_ear_unicorn}}">
+<path d="M108 72 L120 8 L132 72 Z" fill="#FFF1D6" stroke="#E3B866" stroke-width="2.5" stroke-linejoin="round"></path>
+<path d="M111 58 L129 51" fill="none" stroke="#E3B866" stroke-width="2"></path>
+<path d="M114 42 L126 37" fill="none" stroke="#E3B866" stroke-width="2"></path>
+<path d="M117 27 L123 24" fill="none" stroke="#E3B866" stroke-width="2"></path>
+</g>
+<g display="{{v.ears_cat}}">
+<path d="M72 96 L80 42 L114 70 Z" fill="{{fills.body}}" stroke="{{c.base}}" stroke-width="10" stroke-linejoin="round"></path>
+<path d="M168 96 L160 42 L126 70 Z" fill="{{fills.body}}" stroke="{{c.base}}" stroke-width="10" stroke-linejoin="round"></path>
+<path d="M83 80 L86 54 L103 69 Z" fill="#FF9DBA" opacity="0.75"></path>
+<path d="M157 80 L154 54 L137 69 Z" fill="#FF9DBA" opacity="0.75"></path>
+</g>
+<g display="{{v.ears_bunny}}">
+<ellipse cx="94" cy="40" rx="15" ry="40" transform="rotate(-12 94 40)" fill="{{fills.body}}"></ellipse>
+<ellipse cx="146" cy="40" rx="15" ry="40" transform="rotate(12 146 40)" fill="{{fills.body}}"></ellipse>
+<ellipse cx="94" cy="42" rx="6.5" ry="27" transform="rotate(-12 94 42)" fill="#FF9DBA" opacity="0.7"></ellipse>
+<ellipse cx="146" cy="42" rx="6.5" ry="27" transform="rotate(12 146 42)" fill="#FF9DBA" opacity="0.7"></ellipse>
+</g>
+<g display="{{v.ears_antenna}}">
+<path d="M120 68 Q113 46 124 28" fill="none" stroke="#2A2238" stroke-width="3.5" stroke-linecap="round"></path>
+<circle cx="124" cy="23" r="9" fill="#FFC94A" stroke="#2A2238" stroke-width="2.5"></circle>
+<circle cx="121" cy="20" r="2.5" fill="#FFFFFF"></circle>
+</g>
+<g display="{{v.ears_sprout}}">
+<path d="M120 68 Q120 54 120 42" fill="none" stroke="#3E9B5F" stroke-width="4" stroke-linecap="round"></path>
+<path d="M120 46 Q100 26 84 38 Q102 54 120 46 Z" fill="#5CC27E"></path>
+<path d="M120 42 Q138 16 158 28 Q140 48 120 42 Z" fill="#7AD394"></path>
+</g>
+<g display="{{v.ears_horns}}">
+<path d="M84 84 C76 64 80 46 94 36 C92 54 98 66 106 74 Z" fill="#FFF1D6" stroke="#E3C79A" stroke-width="2.5" stroke-linejoin="round"></path>
+<path d="M156 84 C164 64 160 46 146 36 C148 54 142 66 134 74 Z" fill="#FFF1D6" stroke="#E3C79A" stroke-width="2.5" stroke-linejoin="round"></path>
+</g>
+</g>
+
+<ellipse cx="94" cy="207" rx="19" ry="10" fill="{{c.shade}}"></ellipse>
+<ellipse cx="146" cy="207" rx="19" ry="10" fill="{{c.shade}}"></ellipse>
+
+<path d="{{bodyD}}" fill="{{fills.body}}"></path>
+
+<g clip-path="{{fills.clip}}">
+<g display="{{v.pattern_belly}}">
+<ellipse cx="120" cy="184" rx="52" ry="38" fill="#FFFFFF" opacity="0.5"></ellipse>
+</g>
+<g display="{{v.pattern_spots}}">
+<circle cx="70" cy="108" r="12" fill="{{c.deep}}" opacity="0.26"></circle>
+<circle cx="170" cy="98" r="9" fill="{{c.deep}}" opacity="0.26"></circle>
+<circle cx="178" cy="170" r="13" fill="{{c.deep}}" opacity="0.26"></circle>
+<circle cx="60" cy="174" r="8" fill="{{c.deep}}" opacity="0.26"></circle>
+<circle cx="148" cy="76" r="6" fill="{{c.deep}}" opacity="0.26"></circle>
+</g>
+<g display="{{v.pattern_stripe}}">
+<path d="M20 86 Q120 66 220 86 L220 98 Q120 78 20 98 Z" fill="{{c.deep}}" opacity="0.24"></path>
+<path d="M20 108 Q120 90 220 108 L220 118 Q120 100 20 118 Z" fill="{{c.deep}}" opacity="0.2"></path>
+</g>
+</g>
+
+<ellipse cx="88" cy="96" rx="26" ry="15" transform="rotate(-28 88 96)" fill="{{fills.spec}}"></ellipse>
+<circle cx="70" cy="116" r="4" fill="#FFFFFF" opacity="0.7"></circle>
+
+<g display="{{v.cheeks_blush}}">
+<ellipse cx="76" cy="151" rx="13" ry="7.5" fill="#FF7FA8" opacity="0.45"></ellipse>
+<ellipse cx="164" cy="151" rx="13" ry="7.5" fill="#FF7FA8" opacity="0.45"></ellipse>
+</g>
+<g display="{{v.cheeks_freckles}}">
+<circle cx="72" cy="146" r="1.9" fill="#7A4A3A" opacity="0.55"></circle>
+<circle cx="80" cy="151" r="1.9" fill="#7A4A3A" opacity="0.55"></circle>
+<circle cx="70" cy="154" r="1.9" fill="#7A4A3A" opacity="0.55"></circle>
+<circle cx="168" cy="146" r="1.9" fill="#7A4A3A" opacity="0.55"></circle>
+<circle cx="160" cy="151" r="1.9" fill="#7A4A3A" opacity="0.55"></circle>
+<circle cx="170" cy="154" r="1.9" fill="#7A4A3A" opacity="0.55"></circle>
+</g>
+
+<g display="{{v.eyes_dot}}">
+<ellipse cx="96" cy="132" rx="7.5" ry="9.5" fill="#2A2238"></ellipse>
+<ellipse cx="144" cy="132" rx="7.5" ry="9.5" fill="#2A2238"></ellipse>
+<circle cx="98.5" cy="128" r="2.6" fill="#FFFFFF"></circle>
+<circle cx="146.5" cy="128" r="2.6" fill="#FFFFFF"></circle>
+</g>
+<g display="{{v.eyes_sparkle}}">
+<ellipse cx="96" cy="132" rx="11" ry="13.5" fill="#2A2238"></ellipse>
+<ellipse cx="144" cy="132" rx="11" ry="13.5" fill="#2A2238"></ellipse>
+<circle cx="99.5" cy="126.5" r="4.5" fill="#FFFFFF"></circle>
+<circle cx="147.5" cy="126.5" r="4.5" fill="#FFFFFF"></circle>
+<circle cx="92" cy="137" r="2" fill="#FFFFFF"></circle>
+<circle cx="140" cy="137" r="2" fill="#FFFFFF"></circle>
+</g>
+<g display="{{v.eyes_sleepy}}">
+<path d="M85 130 Q96 140 107 130" fill="none" stroke="#2A2238" stroke-width="4" stroke-linecap="round"></path>
+<path d="M133 130 Q144 140 155 130" fill="none" stroke="#2A2238" stroke-width="4" stroke-linecap="round"></path>
+</g>
+<g display="{{v.eyes_wink}}">
+<ellipse cx="96" cy="132" rx="11" ry="13.5" fill="#2A2238"></ellipse>
+<circle cx="99.5" cy="126.5" r="4.5" fill="#FFFFFF"></circle>
+<circle cx="92" cy="137" r="2" fill="#FFFFFF"></circle>
+<path d="M134 135 Q144 124 154 135" fill="none" stroke="#2A2238" stroke-width="4" stroke-linecap="round"></path>
+</g>
+<g display="{{v.eyes_star}}">
+<polygon points="0,-12 2.94,-4.05 11.41,-3.71 4.76,1.55 7.05,9.71 0,5 -7.05,9.71 -4.76,1.55 -11.41,-3.71 -2.94,-4.05" transform="translate(96 132)" fill="#FFC94A" stroke="#2A2238" stroke-width="2.5" stroke-linejoin="round"></polygon>
+<polygon points="0,-12 2.94,-4.05 11.41,-3.71 4.76,1.55 7.05,9.71 0,5 -7.05,9.71 -4.76,1.55 -11.41,-3.71 -2.94,-4.05" transform="translate(144 132)" fill="#FFC94A" stroke="#2A2238" stroke-width="2.5" stroke-linejoin="round"></polygon>
+</g>
+
+<g display="{{v.mouth_smile}}">
+<path d="M110 151 Q120 161 130 151" fill="none" stroke="#2A2238" stroke-width="3.5" stroke-linecap="round"></path>
+</g>
+<g display="{{v.mouth_cat}}">
+<path d="M107 150 Q113.5 158 120 150 Q126.5 158 133 150" fill="none" stroke="#2A2238" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</g>
+<g display="{{v.mouth_open}}">
+<ellipse cx="120" cy="155" rx="8" ry="9" fill="#5A2238"></ellipse>
+<ellipse cx="120" cy="160" rx="5" ry="3.5" fill="#FF7FA8"></ellipse>
+</g>
+<g display="{{v.mouth_tongue}}">
+<path d="M115 155 Q120 168 125 155 Z" fill="#FF7FA8"></path>
+<path d="M108 151 Q120 161 132 151" fill="none" stroke="#2A2238" stroke-width="3.5" stroke-linecap="round"></path>
+</g>
+
+<g transform="{{topT}}">
+<g display="{{v.aura_bow}}">
+<path d="M156 80 L136 66 L138 94 Z" fill="#FF5D7A" stroke="#E8435F" stroke-width="2" stroke-linejoin="round"></path>
+<path d="M156 80 L176 66 L174 94 Z" fill="#FF5D7A" stroke="#E8435F" stroke-width="2" stroke-linejoin="round"></path>
+<circle cx="156" cy="80" r="7" fill="#E8435F"></circle>
+</g>
+<g display="{{v.aura_crown}}">
+<path d="M96 60 L100 32 L110 46 L120 26 L130 46 L140 32 L144 60 Z" fill="#FFC94A" stroke="#D99A1E" stroke-width="2.5" stroke-linejoin="round"></path>
+<circle cx="120" cy="50" r="4" fill="#FF5D7A"></circle>
+<circle cx="106" cy="53" r="3" fill="#7C8CFF"></circle>
+<circle cx="134" cy="53" r="3" fill="#4FC3A1"></circle>
+</g>
+<g display="{{v.aura_halo}}">
+<ellipse cx="120" cy="34" rx="38" ry="9" fill="none" stroke="#FFD95A" stroke-width="6" opacity="0.95"></ellipse>
+<ellipse cx="120" cy="32" rx="38" ry="9" fill="none" stroke="#FFF6C8" stroke-width="2"></ellipse>
+</g>
+</g>
+</svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"text","default":"MOCHI-001"},"size":{"editor":"int","default":240,"min":80,"max":600},"$preview":{"width":240,"height":240}}'>
+var GENES=[
+{key:'body',name:'Body',alleles:[['mochi','Mochi',35],['bean','Bean',25],['pudding','Pudding',25],['drop','Droplet',15]]},
+{key:'hue',name:'Color',alleles:[['#FFB59A','Peach',18],['#93E2BE','Mint',18],['#98C6FF','Sky',16],['#C7B0FF','Lilac',16],['#FFE07A','Lemon',12],['#FFA3C2','Rose',12],['#C99E82','Cocoa',6],['#6C78E0','Midnight',2]]},
+{key:'ears',name:'Top',alleles:[['none','Bare',20],['cat','Cat ears',22],['bunny','Bunny ears',20],['antenna','Antenna',16],['sprout','Sprout',14],['horns','Tiny horns',8]]},
+{key:'eyes',name:'Eyes',alleles:[['dot','Dot',30],['sparkle','Sparkle',28],['sleepy','Sleepy',18],['wink','Wink',16],['star','Star',8]]},
+{key:'mouth',name:'Mouth',alleles:[['smile','Smile',35],['cat','Kitty',25],['open','Gasp',20],['tongue','Bleh',20]]},
+{key:'cheeks',name:'Cheeks',alleles:[['blush','Blush',50],['freckles','Freckles',30],['none','Plain',20]]},
+{key:'pattern',name:'Pattern',alleles:[['plain','Solid',40],['belly','Belly',30],['spots','Spots',20],['stripe','Stripes',10]]},
+{key:'aura',name:'Charm',alleles:[['none','None',55],['bow','Bow',25],['crown','Crown',15],['halo','Halo',5]]},
+{key:'temper',name:'Temper',alleles:[['playful','Playful',20],['sleepy','Dreamy',20],['curious','Curious',20],['brave','Brave',20],['shy','Shy',20]]}
+];
+var SYL=['Mo','Pi','Nu','Ki','Lu','Bo','Ta','Fi','Zu','Po','Mi','Ru','Ko','Yu','Chi','Pa'];
+var SUF=['','chi','po','n','ko','mi'];
+function tgHash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function tgRng(a){return function(){a=(a+0x6D2B79F5)|0;var t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function tgDecode(seed){
+var norm=String(seed==null?'':seed).trim().toUpperCase();
+var h=tgHash(norm);var r=tgRng(h);var B='ATGC';
+var name=SYL[Math.floor(r()*16)]+SYL[Math.floor(r()*16)].toLowerCase()+SUF[Math.floor(r()*6)];
+var genes={},list=[],pts=0;
+GENES.forEach(function(g){var x=r()*100,acc=0,idx=g.alleles.length-1;
+for(var i=0;i<g.alleles.length;i++){acc+=g.alleles[i][2];if(x<acc){idx=i;break;}}
+var a=g.alleles[idx],w=a[2],p=w<=5?4:w<=8?3:w<=12?2:w<=16?1:0;pts+=p;genes[g.key]=a[0];
+list.push({key:g.key,gene:g.name,value:a[0],label:a[1],odds:w+'%',points:p,codon:B[(idx>>2)&3]+B[idx&3]});});
+var stats={appetite:3+Math.floor(r()*8),energy:3+Math.floor(r()*8),charm:3+Math.floor(r()*8)};
+var UQ=[['tail','Tail',45,[['tail_fluffy','Fluffy tail',50],['tail_curly','Curly tail',30],['tail_bolt','Lightning tail',15],['tail_flame','Flame tail',5]]],['wing','Wings',35,[['wing_feather','Feather wings',50],['wing_bat','Bat wings',30],['wing_butterfly','Butterfly wings',15],['wing_angel','Angel wings',5]]],['ear','Mystic ears',20,[['ear_fox','Fox ears',50],['ear_elf','Elf ears',30],['ear_crystal','Crystal horns',15],['ear_unicorn','Unicorn horn',5]]]];
+var u1=r()*100,u2=r()*100,u3=r()*100,uq={value:'none',slot:'none',slotLabel:'None',label:'No unique part',chance:'60%',slotOdds:'',varOdds:'',points:0,idx:0};
+if(u1<40){var si=UQ.length-1,acc2=0;for(var j=0;j<UQ.length;j++){acc2+=UQ[j][2];if(u2<acc2){si=j;break;}}
+var S=UQ[si],vi=S[3].length-1,acc3=0;for(var k=0;k<S[3].length;k++){acc3+=S[3][k][2];if(u3<acc3){vi=k;break;}}
+var pc=40*S[2]*S[3][vi][2]/10000,up=pc<=1?5:pc<=3?4:pc<=6?3:pc<=12?2:1;
+uq={value:S[3][vi][0],slot:S[0],slotLabel:S[1],label:S[3][vi][1],chance:(Math.round(pc*10)/10)+'%',slotOdds:S[2]+'%',varOdds:S[3][vi][2]+'%',points:up,idx:si*4+vi+1};pts+=up;}
+genes.unique=uq.value;
+list.push({key:'unique',gene:'Unique',value:uq.value,label:uq.slot==='none'?'None':uq.label,odds:uq.chance,points:uq.points,codon:B[(uq.idx>>2)&3]+B[uq.idx&3]});
+var tier=pts>=13?'Legendary':pts>=10?'Epic':pts>=7?'Rare':pts>=4?'Uncommon':'Common';
+return {norm:norm,hash:h,hex:('00000000'+h.toString(16)).slice(-8).toUpperCase(),name:name,genes:genes,list:list,dna:list.map(function(c){return c.codon;}).join(''),points:pts,tier:tier,stats:stats,unique:uq};
+}
+function tgMix(a,b,t){var pa=parseInt(a.slice(1),16),pb=parseInt(b.slice(1),16);
+var r=Math.round(((pa>>16)&255)*(1-t)+((pb>>16)&255)*t),g=Math.round(((pa>>8)&255)*(1-t)+((pb>>8)&255)*t),bl=Math.round((pa&255)*(1-t)+(pb&255)*t);
+return '#'+((1<<24)|(r<<16)|(g<<8)|bl).toString(16).slice(1);}
+var BODY={
+mochi:['M120 62 C172 62 202 100 202 146 C202 190 166 208 120 208 C74 208 38 190 38 146 C38 100 68 62 120 62 Z',62],
+bean:['M120 50 C160 50 182 90 182 140 C182 186 156 210 120 210 C84 210 58 186 58 140 C58 90 80 50 120 50 Z',50],
+pudding:['M120 74 C162 74 188 98 194 142 C200 184 180 208 120 208 C60 208 40 184 46 142 C52 98 78 74 120 74 Z',74],
+drop:['M120 48 C138 78 198 108 198 152 C198 190 164 210 120 210 C76 210 42 190 42 152 C42 108 102 78 120 48 Z',56]
+};
+class Component extends DCLogic {
+renderVals() {
+var seed=this.props.seed ?? 'MOCHI-001';
+var size=this.props.size ?? 240;
+if(!this._u){this._u=Math.random().toString(36).slice(2,8);}
+var d=tgDecode(seed);var g=d.genes;var uid='tg'+d.hex+this._u;
+var base=g.hue;
+var c={base:base,light:tgMix(base,'#FFFFFF',0.6),shade:tgMix(base,'#2A2050',0.36),deep:tgMix(base,'#2A2050',0.55)};
+var b=BODY[g.body]||BODY.mochi;
+var v={};
+GENES.forEach(function(gg){gg.alleles.forEach(function(a){v[gg.key+'_'+a[0]]=g[gg.key]===a[0]?'inline':'none';});});
+['tail_fluffy','tail_curly','tail_bolt','tail_flame','wing_feather','wing_bat','wing_butterfly','wing_angel','ear_fox','ear_elf','ear_crystal','ear_unicorn'].forEach(function(k){v['u_'+k]=g.unique===k?'inline':'none';});
+if(d.unique.slot==='ear'){GENES[2].alleles.forEach(function(a){v['ears_'+a[0]]='none';});}
+var ids={body:uid+'b',shadow:uid+'s',spec:uid+'h',clip:uid+'c'};
+return {
+size:size,
+alt:d.name+', a '+d.tier.toLowerCase()+' tamagot',
+c:c,
+ids:ids,
+fills:{body:'url(#'+ids.body+')',shadow:'url(#'+ids.shadow+')',spec:'url(#'+ids.spec+')',clip:'url(#'+ids.clip+')'},
+bodyD:b[0],
+topT:'translate(0 '+(b[1]-62)+')',
+v:v
+};
+}
+}
+</script>
+</body>
+</html>
