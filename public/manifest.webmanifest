@@ -1,0 +1,12 @@
+{
+  "name": "Pocket Pet",
+  "short_name": "Pocket Pet",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff4ec",
+  "theme_color": "#ffd9e4",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

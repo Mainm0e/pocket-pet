@@ -1,0 +1,71 @@
+# Pocket Pet
+
+A casual, mobile-first 3D virtual pet game. Hatch a squishy mochi from a seed,
+raise it in its little 3D room, and watch how you care for it shape its body,
+features, colours and personality. The DNA system is documented in
+[docs/DNA.md](docs/DNA.md).
+
+## Run it
+
+```bash
+npm install
+npm run dev        # http://localhost:5173 (also on your LAN, so you can open it on a phone)
+npm test           # engine unit tests
+npm run build      # production build in dist/ (installable PWA)
+```
+
+Prototype helpers:
+
+- `?dev` adds a DEV button that moves the game clock forward (+1h / +6h / +1 day) or resets the save.
+  Growth is time-gated, so this is how you can see Teen and Adult without waiting days.
+- `?lab` opens the **Seed Lab**: type any seed and see its DNA, rarity and a 3D model at every
+  stage, form, care level and mark, plus showcase seeds for every rare part. With `?lab&dev`
+  you can hatch the seed you're looking at as your pet.
+
+## How it's built
+
+```
+src/server/      game rules ("server"): the only place state changes
+  constants.js   tuning: decay, caps, stage gates, marks, quirks...
+  dna.js         personality quiz + DNA roll (seed + answer nudges)
+  pet.js         care, timestamp catch-up, traits, evolution, names, DNA string
+  battle.js      turn-by-turn auto-battle + simulated friends
+  index.js       async API facade, storage, unique-seed registry, daily limits
+src/lib/         api.js (the only door to the server), game.svelte.js (UI store)
+src/server/genome/  seed code -> DNA (frozen per generation; see docs/DNA.md)
+src/species/     species art, lazy-loaded: mochi/ (Season 1) and shiba/ (ready for later).
+                 sculpt.js = smooth SDF sculpt (runs in sculpt.worker.js), build.js = model + accessories
+src/three/       Three.js: kit (materials, helpers), stage (3D room, motion, care scenes),
+                 viewer (turntable), thumbs (offscreen stills for cards and battles)
+src/components/  Room, Meters, sheets, PetCard, Quiz, Evolution, Battle, SeedLab...
+```
+
+**Server-authoritative from day one.** The UI never changes game state. It calls
+`api.*` and receives read-only copies. Nothing ticks in the background. Each call
+replays time since `lastUpdated` in 10-minute steps (decay, sleep, messes,
+vividness), so being away works the same as being online. For now the "server"
+runs in the browser and saves to `localStorage`. To move to Supabase, port
+`src/server/index.js` handlers to Edge Functions and store `db` in Postgres;
+`src/lib/api.js` is the only client file that changes.
+
+### Rules at a glance
+
+| | |
+|---|---|
+| Care stats | 5 stats, floor of 5 (pets never die). If energy runs out, the pet goes to sleep on its own. |
+| Traits | Feed → Tough, Play → Playful, Train → Strong, Bath/Sleep/Clean → Calm. 20 points/day, 150 total cap. Talent grows 1.5×. |
+| Stages | Egg (5 taps) → Baby → Teen (≥1 day old & 25 traits) → Adult (≥3 days & 70 traits) |
+| Looks | Seed code decides flavour, shape, face, top, pattern, topper, base, charm, rare part and fingerprint (including how squishy and bouncy it is). Teen body = top trait (Strong: spikes, Playful: bunny ears, Tough: chubby, Calm: tall with a leaf). Adult feature = second trait (horns, curly tail, chunky feet, halo). Vividness from care, marks from history. |
+| Battles | 5/day, counted when a battle starts, and unfinished battles resume, so restarting can't re-roll a result. Cheer/Shield/Snack once each. Mood ±10%. Rewards are cosmetic only. |
+| Anti-spam | Overfeeding is refused, Play/Train need energy, Bath has a 2h cooldown, messes limit cleaning |
+
+Battle balance was checked by simulation. Focused builds (about 47% in one
+trait) win 38–62% against each other, and a pet with 20% fewer trait points
+still wins about 1 in 4.
+
+## Not built yet
+
+Real backend and auth, real friends and visits, push notifications, more
+species and seasonal eggs, fusion, enchanting, Pet Dash. Pets are sculpted
+in code (smooth SDF shapes); an artist-made model (glTF) could replace a species'
+build.js later without changing any DNA.

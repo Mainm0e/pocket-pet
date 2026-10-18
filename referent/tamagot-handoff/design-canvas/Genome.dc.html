@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How Tamagot DNA works</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1280px; height: 2150px; box-sizing: border-box; padding: 56px; display: flex; flex-direction: column; gap: 44px; background: #EFF1F5; font-family: 'Fredoka', system-ui, sans-serif; color: #1B1D2A">
+
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.14em; color: #5A5F78">GENOME SPEC · V1</div>
+<h2 style="margin: 0; font-size: 52px; line-height: 1.02; font-weight: 700">How a seed becomes a tamagot</h2>
+</div>
+<div style="display: flex; gap: 12px">
+<div style="padding: 14px 18px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 28px; font-weight: 700">12 million</span>
+<span style="font-size: 13px; color: #5A5F78">possible gene mixes</span>
+</div>
+<div style="padding: 14px 18px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 28px; font-weight: 700">18 billion</span>
+<span style="font-size: 13px; color: #5A5F78">with names</span>
+</div>
+</div>
+</div>
+
+<div style="display: flex; align-items: stretch; gap: 10px">
+<div style="flex: 1; padding: 20px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">01 · SEED</span>
+<span style="font-size: 20px; font-weight: 600">Any text</span>
+<span style="font-size: 14px; line-height: 1.45; color: #3D4157">Your name, a birthday, “MOCHI-001”. Trimmed and uppercased, so “mochi” and “MOCHI” match.</span>
+</div>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center; flex-shrink: 0"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+<div style="flex: 1; padding: 20px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">02 · HASH</span>
+<span style="font-size: 20px; font-weight: 600">One number</span>
+<span style="font-size: 14px; line-height: 1.45; color: #3D4157">FNV-1a squeezes the text into a 32-bit number. Change one letter and the number changes completely.</span>
+</div>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center; flex-shrink: 0"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+<div style="flex: 1; padding: 20px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">03 · ROLL</span>
+<span style="font-size: 20px; font-weight: 600">A fixed dice stream</span>
+<span style="font-size: 14px; line-height: 1.45; color: #3D4157">That number starts a mulberry32 random stream. Same seed, same rolls, on every device.</span>
+</div>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center; flex-shrink: 0"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+<div style="flex: 1; padding: 20px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">04 · EXPRESS</span>
+<span style="font-size: 20px; font-weight: 600">10 genes, 20 bases</span>
+<span style="font-size: 14px; line-height: 1.45; color: #3D4157">Each gene rolls an allele by its odds, then a bonus roll may add a unique part. Every result becomes a two-letter codon from A, T, G and C.</span>
+</div>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center; flex-shrink: 0"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+<div style="flex: 1; padding: 20px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">05 · GRADE</span>
+<span style="font-size: 20px; font-weight: 600">Rarity tier</span>
+<span style="font-size: 14px; line-height: 1.45; color: #3D4157">Rare alleles add points. The total sets the tier, from Common up to Legendary.</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h3 style="margin: 0; font-size: 26px; font-weight: 600">The nine genes</h3>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5A5F78">allele · odds · codon · rarity pts</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start">
+<sc-for list="{{genes}}" as="g" hint-placeholder-count="9">
+<div style="padding: 18px 20px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 20px; font-weight: 600">{{g.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5A5F78">gene {{g.num}}</span>
+</div>
+<sc-for list="{{g.alleles}}" as="a" hint-placeholder-count="4">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 48px 36px 36px; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 10px; background: {{a.bg}}">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 15px">
+<span style="width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: {{a.swatch}}"></span>
+{{a.label}}
+</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; color: #3D4157">{{a.odds}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; text-align: center">{{a.codon}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: right; color: #3D4157">{{a.pts}}</span>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h3 style="margin: 0; font-size: 26px; font-weight: 600">Gene 10 · Unique parts, a chance inside a chance</h3>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #5A5F78">in-part odds · overall odds · rarity pts</span>
+</div>
+<div style="display: flex; align-items: stretch; gap: 10px">
+<div style="flex: 1; padding: 16px 20px; border-radius: 20px; background: #1B1D2A; color: #F3F4F8; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #B9C2FF">ROLL 1 · LUCKY?</span>
+<span style="font-size: 18px; font-weight: 600">40% get a unique part</span>
+<span style="font-size: 14px; color: #D5D8E6">The other 60% hatch without one. Codon AA.</span>
+</div>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center; flex-shrink: 0"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+<div style="flex: 1; padding: 16px 20px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">ROLL 2 · WHICH PART</span>
+<span style="font-size: 18px; font-weight: 600">Tail 45 · Wings 35 · Ears 20</span>
+<span style="font-size: 14px; color: #3D4157">Mystic ears replace the normal Top gene.</span>
+</div>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center; flex-shrink: 0"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+<div style="flex: 1; padding: 16px 20px; border-radius: 20px; background: #FFFFFF; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">ROLL 3 · WHICH VERSION</span>
+<span style="font-size: 18px; font-weight: 600">50 · 30 · 15 · 5</span>
+<span style="font-size: 14px; color: #3D4157">Every part has a common, an uncommon, a rare and a super-rare version.</span>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start">
+<sc-for list="{{uparts}}" as="u" hint-placeholder-count="3">
+<div style="padding: 18px 20px; border-radius: 24px; background: {{u.bg}}; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 20px; font-weight: 600; color: #1B1D2A">{{u.name}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: {{u.ink}}">{{u.odds}} of lucky rolls</span>
+</div>
+<sc-for list="{{u.variants}}" as="vr" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 6px; border-radius: 16px; background: #FFFFFF">
+<div style="width: 76px; height: 76px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #F5F6FA">
+<dc-import name="Pet" seed="{{vr.seed}}" size="{{petSize}}" hint-size="70px,70px"></dc-import>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 16px; font-weight: 600">{{vr.label}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5A5F78">seed {{vr.seed}} · {{vr.codon}}</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #3D4157">{{vr.inPart}} → {{vr.overall}}</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: {{u.ink}}">+{{vr.pts}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h3 style="margin: 0; font-size: 26px; font-weight: 600">Rarity tiers</h3>
+<div style="display: flex; gap: 12px">
+<div style="flex: 1; padding: 14px 18px; border-radius: 18px; background: #E3E6EE; color: #2B2F42; display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 18px; font-weight: 600">Common</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px">0–3 pts</span></div>
+<div style="flex: 1; padding: 14px 18px; border-radius: 18px; background: #CDEFD9; color: #1E5B3A; display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 18px; font-weight: 600">Uncommon</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px">4–6 pts</span></div>
+<div style="flex: 1; padding: 14px 18px; border-radius: 18px; background: #D3E2FF; color: #1F3E8A; display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 18px; font-weight: 600">Rare</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px">7–9 pts</span></div>
+<div style="flex: 1; padding: 14px 18px; border-radius: 18px; background: #E6D6FF; color: #4A2390; display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 18px; font-weight: 600">Epic</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px">10–12 pts</span></div>
+<div style="flex: 1; padding: 14px 18px; border-radius: 18px; background: #FFE39A; color: #6B4500; display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 18px; font-weight: 600">Legendary</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 13px">13+ pts</span></div>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+<div style="padding: 22px 24px; border-radius: 24px; background: #1B1D2A; color: #F3F4F8; display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #B9C2FF">IDEA · MAKE IT YOURS</span>
+<span style="font-size: 22px; font-weight: 600">Owner seed</span>
+<span style="font-size: 15px; line-height: 1.5; color: #D5D8E6">Hatch from your handle plus the moment you pressed the egg: “MAIN·2026-10-18·06:02”. Nobody else can land the same pet unless you share the seed.</span>
+</div>
+<div style="padding: 22px 24px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">IDEA · BREEDING</span>
+<span style="font-size: 22px; font-weight: 600">Two parents, one egg</span>
+<span style="font-size: 15px; line-height: 1.5; color: #3D4157">The child’s seed is “A×B”. Its own stream flips a coin per gene to take Mom’s or Dad’s codon, and 1 gene in 50 mutates to a fresh roll.</span>
+</div>
+<div style="padding: 22px 24px; border-radius: 24px; background: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #6371D9">IDEA · SHARE CODE</span>
+<span style="font-size: 22px; font-weight: 600">DNA as a pet card</span>
+<span style="font-size: 15px; line-height: 1.5; color: #3D4157">The 18-base strand is the pet’s fingerprint. Print it on a trading card or QR code, and anyone can rebuild the exact tamagot from it.</span>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2150}}'>
+var GENES=[
+{key:'body',name:'Body',alleles:[['mochi','Mochi',35],['bean','Bean',25],['pudding','Pudding',25],['drop','Droplet',15]]},
+{key:'hue',name:'Color',alleles:[['#FFB59A','Peach',18],['#93E2BE','Mint',18],['#98C6FF','Sky',16],['#C7B0FF','Lilac',16],['#FFE07A','Lemon',12],['#FFA3C2','Rose',12],['#C99E82','Cocoa',6],['#6C78E0','Midnight',2]]},
+{key:'ears',name:'Top',alleles:[['none','Bare',20],['cat','Cat ears',22],['bunny','Bunny ears',20],['antenna','Antenna',16],['sprout','Sprout',14],['horns','Tiny horns',8]]},
+{key:'eyes',name:'Eyes',alleles:[['dot','Dot',30],['sparkle','Sparkle',28],['sleepy','Sleepy',18],['wink','Wink',16],['star','Star',8]]},
+{key:'mouth',name:'Mouth',alleles:[['smile','Smile',35],['cat','Kitty',25],['open','Gasp',20],['tongue','Bleh',20]]},
+{key:'cheeks',name:'Cheeks',alleles:[['blush','Blush',50],['freckles','Freckles',30],['none','Plain',20]]},
+{key:'pattern',name:'Pattern',alleles:[['plain','Solid',40],['belly','Belly',30],['spots','Spots',20],['stripe','Stripes',10]]},
+{key:'aura',name:'Charm',alleles:[['none','None',55],['bow','Bow',25],['crown','Crown',15],['halo','Halo',5]]},
+{key:'temper',name:'Temper',alleles:[['playful','Playful',20],['sleepy','Dreamy',20],['curious','Curious',20],['brave','Brave',20],['shy','Shy',20]]}
+];
+var B='ATGC';
+var UQ=[['tail','Tail',45,['#FFE3D6','#8A3A17'],[['Fluffy tail',50,'FLUFF-12'],['Curly tail',30,'CURL-7'],['Lightning tail',15,'ZAP-12'],['Flame tail',5,'EMBER-81']]],['wing','Wings',35,['#E3E7FF','#2F3A9E'],[['Feather wings',50,'FEATHER-20'],['Bat wings',30,'BAT-3'],['Butterfly wings',15,'FLUTTER-19'],['Angel wings',5,'ANGEL-66']]],['ear','Mystic ears',20,['#DDF3E7','#1E5B3A'],[['Fox ears',50,'FOX-32'],['Elf ears',30,'ELF-76'],['Crystal horns',15,'GEM-55'],['Unicorn horn',5,'UNI-14']]]];
+class Component extends DCLogic {
+renderVals() {
+return {
+petSize:70,
+uparts:UQ.map(function(S,si){return {name:S[1],odds:S[2]+'%',bg:S[3][0],ink:S[3][1],variants:S[4].map(function(x,vi){var pc=40*S[2]*x[1]/10000;var p=pc<=1?5:pc<=3?4:pc<=6?3:pc<=12?2:1;var idx=si*4+vi+1;return {label:x[0],seed:x[2],inPart:x[1]+'%',overall:(Math.round(pc*10)/10)+'%',pts:p,codon:B[(idx>>2)&3]+B[idx&3]};})};}),
+genes:GENES.map(function(g,gi){return {name:g.name,num:gi+1,alleles:g.alleles.map(function(a,i){var w=a[2];var p=w<=5?4:w<=8?3:w<=12?2:w<=16?1:0;return {label:a[1],odds:w+'%',codon:B[(i>>2)&3]+B[i&3],pts:p>0?'+'+p:'—',bg:p>=3?'#FFF1CC':'#F5F6FA',swatch:g.key==='hue'?a[0]:'#D4D8E6'};})};})
+};
+}
+}
+</script>
+</body>
+</html>

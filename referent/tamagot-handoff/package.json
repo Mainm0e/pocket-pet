@@ -1,0 +1,14 @@
+{
+  "name": "tamagot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "3D virtual pet: seed-based DNA, life stages, raising styles",
+  "scripts": {
+    "test": "node tests/genome.test.js",
+    "render-check": "node tests/render-check.js"
+  },
+  "devDependencies": {
+    "three": "0.128.0",
+    "playwright": "^1.40.0"
+  }
+}
