@@ -58,7 +58,9 @@ const args = software
 const browser = await chromium.launch({ executablePath: findChromium(), args });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const page = await ctx.newPage();
-page.setDefaultTimeout(20000);
+// software WebGL (CI) is slow: be patient with navigation and long waits
+page.setDefaultTimeout(software ? 45000 : 20000);
+page.setDefaultNavigationTimeout(120000);
 const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => m.type() === 'error' && errors.push('console: ' + m.text()));
@@ -69,9 +71,9 @@ const evo = () => page.locator('.evo').count();
 
 try {
   // ---- hatching ----
-  await page.goto(`${URL}/?dev`);
+  await page.goto(`${URL}/?dev`, { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => localStorage.clear());
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await wait(2500);
   await shot('01-intro');
   await btn("Let's go").click();
@@ -212,19 +214,23 @@ try {
   await shot('12-decorate');
   await btn('Done').click();
   await wait(1500);
-  await page.reload();
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!window.__stage, null, { timeout: 120000 });
   await wait(3500);
   const room = await page.evaluate(() => JSON.parse(localStorage['pocketpet.db.v1']).room);
   check(room?.wall === 'mint' && room.floor === 'checker' && room.items.some((i) => i.kind === 'toybox'), 'decorated room is saved and survives a reload');
   await shot('13-room-after-reload');
 
   // ---- seed lab ----
-  await page.goto(`${URL}/?lab&seed=MO1-3E&stage=adult&top=playful&second=calm&yaw=0.4`);
+  await page.goto(`${URL}/?lab&seed=MO1-3E&stage=adult&top=playful&second=calm&yaw=0.4`, { waitUntil: 'domcontentloaded' });
+  await page.locator('.gene').first().waitFor({ timeout: 120000 });
   await wait(5500);
   await shot('14-seed-lab');
   check((await page.locator('.gene').count()) > 8, 'Seed Lab shows genes');
 } catch (err) {
-  failures.push('crashed: ' + err.message.split('\n')[0]);
+  const msg = 'crashed: ' + err.message.split('\n')[0];
+  console.log('FAIL ' + msg);
+  failures.push(msg);
   await shot('crash').catch(() => {});
 } finally {
   await browser.close();
