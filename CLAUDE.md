@@ -110,4 +110,4 @@ Data flow: UI → `api.*()` → server mutates `db` → returns `{ state, events
 8. **Pet Dash:** a side-runner mini-game where traits affect the run, with friend high scores only.
 9. **Vacation mode:** if wanted, a limited pause such as once a day for a few hours, enforced on the server. Never a free pause.
 10. **Art:** an artist-made glTF base model per species could replace `build.js`, with DNA driving recolours, blend shapes and accessories. Codes don't change.
-11. **CI:** add a workflow that runs `npm test`, `npm run build` and `npm run smoke -- --software`.
+11. **CI:** [.github/workflows/ci.yml](.github/workflows/ci.yml) runs `npm test`, `npm run build` and `npm run smoke -- --software` on every push and PR (screenshots are uploaded as an artifact). Keep it green.

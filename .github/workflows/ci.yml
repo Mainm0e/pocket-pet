@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Unit tests (rules, genome, room, 3D models)
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium-headless-shell
+      - name: Smoke test (software WebGL, no GPU on CI)
+        run: npm run smoke -- --software
+      - name: Upload smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screenshots
+          path: screenshots/
+          if-no-files-found: ignore
