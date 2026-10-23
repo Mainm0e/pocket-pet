@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { createServer } from './index.js';
 import { createPersonality, QUIZ } from './dna.js';
 import { codeFromNumber } from './genome/index.js';
-import { newPet, catchUp, act, gainTrait, checkEvolution, dnaString, title, traitTotal, gainBond, obeyChance, recordVisit, wishFor, grantWish, dayKey } from './pet.js';
+import { newPet, catchUp, act, gainTrait, checkEvolution, dnaString, title, traitTotal, gainBond, obeyChance, recordVisit, wishFor, grantWish, dayKey, forecast } from './pet.js';
 import { createBattle, stepBattle, makeFriendPet } from './battle.js';
-import { HOUR, DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, CARE_FLOOR, BATTLES_PER_DAY, BOND, MATCH_POINTS, WISHES, WISH_PATS, GREET_AWAY } from './constants.js';
+import { HOUR, DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, CARE_FLOOR, BATTLES_PER_DAY, BOND, MATCH_POINTS, WISHES, WISH_PATS, GREET_AWAY, REMINDERS } from './constants.js';
 
 const memStorage = () => {
   const m = new Map();
@@ -265,6 +265,52 @@ describe('daily wish', () => {
     }
     act(p, 'pat', null, t);
     expect(grantWish(p, 'pat', t)).toHaveLength(1);
+  });
+});
+
+describe('reminders forecast', () => {
+  const at = (h, m = 0) => new Date(2026, 9, 18, h, m).getTime();
+  it('predicts hunger from the care rules, without changing the pet', () => {
+    const p = hatched(1);
+    p.lastFed = at(9);
+    p.lastUpdated = at(9);
+    const before = JSON.stringify(p);
+    const f = forecast(p, at(9));
+    expect(JSON.stringify(p)).toBe(before); // read-only
+    const hungry = f.find((r) => r.kind === 'hungry');
+    expect(hungry.at).toBeGreaterThanOrEqual(at(9) + REMINDERS.HUNGRY_AFTER);
+    expect(hungry.at).toBeLessThanOrEqual(at(9) + REMINDERS.HUNGRY_AFTER + HOUR);
+  });
+  it('keeps quiet at night and moves reminders to the morning', () => {
+    const p = hatched(1);
+    p.lastFed = at(16);
+    p.lastUpdated = at(16);
+    for (const r of forecast(p, at(16))) {
+      const h = new Date(r.at).getHours();
+      expect(h >= REMINDERS.QUIET_TO && h < REMINDERS.QUIET_FROM).toBe(true);
+    }
+    // hungry around midnight -> 08:00 next day
+    const hungry = forecast(p, at(16)).find((r) => r.kind === 'hungry');
+    expect(new Date(hungry.at).getHours()).toBe(REMINDERS.QUIET_TO);
+  });
+  it('reminds about an open wish in the evening, not once it is granted', () => {
+    const p = hatched(1);
+    p.lastUpdated = at(10);
+    p.lastFed = at(10);
+    expect(forecast(p, at(10)).find((r) => r.kind === 'wish')?.at).toBe(at(REMINDERS.WISH_AT));
+    p.daily = { ...p.daily, day: dayKey(at(10)), wishDone: true };
+    expect(forecast(p, at(10)).some((r) => r.kind === 'wish')).toBe(false);
+  });
+  it('never more than a few a day, never for eggs', () => {
+    const p = hatched(1);
+    p.lastUpdated = at(9);
+    p.lastFed = at(9);
+    p.care.happiness = 36;
+    const perDay = {};
+    for (const r of forecast(p, at(9))) perDay[dayKey(r.at)] = (perDay[dayKey(r.at)] ?? 0) + 1;
+    for (const n of Object.values(perDay)) expect(n).toBeLessThanOrEqual(REMINDERS.PER_DAY);
+    const egg = newPet({ id: 'e', code: codeFromNumber(5), answers: [], now: T0 });
+    expect(forecast(egg, T0)).toEqual([]);
   });
 });
 
