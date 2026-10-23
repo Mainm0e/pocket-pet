@@ -118,6 +118,9 @@ async function buildMochi(look, detail) {
   const inkMat = softMat(INK, { sheen: 0 });
   const eyeS = S.eye * F.eye * 1.15;
   const hetero = g.mutations.includes('hetero');
+  // two faces: the everyday one, and an anime "mad" one (V brows, gritted teeth) shown for a moment
+  const faceNormal = [];
+  const faceMad = [];
   sp.eyes.forEach((hit, i) => {
     const s = i ? 1 : -1;
     const eg = stick(new THREE.Group(), hit, -0.012);
@@ -158,31 +161,39 @@ async function buildMochi(look, detail) {
       b.position.set(0, 0.085 * eyeS, 0.02);
       b.rotation.z = s * 0.35;
       eg.add(b);
+      faceNormal.push(b);
     } else if (form) {
       // How it was raised shows in its face (its top trait). `-s` points toward the middle of the face.
       const by = 0.1 * eyeS;
+      let b = null;
       if (form === 'strong') {
-        // determined: inner ends pulled down
-        const b = tube(inkMat, [[s * 0.048, 0.018, 0], [-s * 0.04, -0.018, 0]], 0.015);
+        // fighting spirit: sharp anime brows, inner ends pulled well down
+        b = tube(inkMat, [[s * 0.05, 0.024, 0], [-s * 0.042, -0.022, 0]], 0.016);
         b.position.set(0, by, 0.02);
-        eg.add(b);
       } else if (form === 'playful') {
         // happy: raised little arches
-        const b = torus(inkMat, 0.038, 0.011, Math.PI, 16);
+        b = torus(inkMat, 0.038, 0.011, Math.PI, 16);
         b.position.set(0, by + 0.008, 0.018);
-        eg.add(b);
       } else if (form === 'tough') {
         // easygoing: flat and relaxed
-        const b = tube(inkMat, [[-0.042, 0, 0], [0.042, 0, 0]], 0.013);
+        b = tube(inkMat, [[-0.042, 0, 0], [0.042, 0, 0]], 0.013);
         b.position.set(0, by - 0.006, 0.02);
-        eg.add(b);
       } else if (form === 'calm') {
         // serene: soft, outer ends a little lower
-        const b = tube(inkMat, [[s * 0.046, -0.012, 0], [-s * 0.038, 0.008, 0]], 0.01);
+        b = tube(inkMat, [[s * 0.046, -0.012, 0], [-s * 0.038, 0.008, 0]], 0.01);
         b.position.set(0, by, 0.02);
+      }
+      if (b) {
         eg.add(b);
+        faceNormal.push(b);
       }
     }
+    // mad brows: a steep V
+    const mb = tube(inkMat, [[s * 0.052, 0.034, 0], [-s * 0.044, -0.03, 0]], 0.017);
+    mb.position.set(0, 0.1 * eyeS, 0.02);
+    mb.visible = false;
+    eg.add(mb);
+    faceMad.push(mb);
     parts.eyes.push(eg);
     parts.blink.push(lid);
   });
@@ -211,15 +222,32 @@ async function buildMochi(look, detail) {
     }
   }
 
-  // a Strong adult grins with one tiny confident fang
-  if (feature === 'strong' && G.mouth !== 'open') {
-    const fang = blob(glossMat('#FFFFFF', { roughness: 0.25 }), [0.012, 0.019, 0.009]);
-    fang.position.set(0.018, -0.02, 0.01);
-    const edge = blob(inkMat, [0.0145, 0.0215, 0.006]); // a thin dark rim so it reads on pale mochi
-    edge.position.set(0.018, -0.02, 0.005);
-    mouth.add(edge);
-    mouth.add(fang);
-  }
+  faceNormal.push(...mouth.children);
+  // mad mouth: gritted teeth with a zigzag, anime style
+  const grit = new THREE.Group();
+  grit.add(blob(inkMat, [0.066, 0.038, 0.008]));
+  const teeth = blob(glossMat('#FFFFFF', { roughness: 0.3 }), [0.057, 0.03, 0.009]);
+  teeth.position.z = 0.004;
+  grit.add(teeth);
+  const zz = [];
+  for (let k = 0; k <= 6; k++) zz.push([-0.048 + k * 0.016, k % 2 ? 0.009 : -0.009, 0.013]);
+  grit.add(tube(inkMat, zz, 0.0045));
+  grit.visible = false;
+  mouth.add(grit);
+  faceMad.push(grit);
+  // Strong pets (by top trait or adult feature) get fired up when training or spiking
+  parts.fierce = form === 'strong' || feature === 'strong';
+  const lids = parts.blink;
+  /** 'mad' shows the anime angry face (and narrows the eyes a little); anything else is the everyday face. */
+  parts.setExpression = (e) => {
+    const mad = e === 'mad';
+    for (const m of faceNormal) m.visible = !mad;
+    for (const m of faceMad) m.visible = mad;
+    for (const l of lids) {
+      l.userData.calmRest ??= l.userData.rest ?? 1;
+      l.userData.rest = mad ? Math.min(l.userData.calmRest, 0.72) : l.userData.calmRest;
+    }
+  };
 
   const crown = sp.crown ? V(sp.crown.p) : new THREE.Vector3(0, sp.top, 0);
   // ---- top extras that aren't part of the sculpt ----

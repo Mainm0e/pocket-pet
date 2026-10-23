@@ -6,7 +6,7 @@
   import PetThumb from './PetThumb.svelte';
 
   const q = new URLSearchParams(location.search);
-  let text = $state(q.get('seed') || 'MO1-DAIFUKU');
+  let text = $state(q.get('seed') || 'MO2-DAIFUKU');
   let stage = $state(q.get('stage') || 'adult');
   let top = $state(q.get('top') || 'tough');
   let second = $state(q.get('second') || 'calm');
@@ -41,7 +41,7 @@
     if (!viewer) return;
     const t = setTimeout(async () => {
       busy = true;
-      await viewer.setLook(l);
+      await viewer.setLook(l, { face: q.get('face') }); // ?face=mad shows the angry face
       busy = false;
     }, 180);
     return () => clearTimeout(t);

@@ -182,6 +182,12 @@ const SOUNDS = {
   click(t) {
     tone(t, 1200, { dur: 0.03, type: 'square', vol: 0.05 });
   },
+  // a cute little "hmph!" for the anime angry face
+  grr(t) {
+    tone(t, 260, { dur: 0.09, type: 'square', to: 200, vol: 0.07 });
+    tone(t + 0.1, 230, { dur: 0.14, type: 'square', to: 150, vol: 0.08 });
+    noise(t, { dur: 0.22, freq: 400, q: 2, vol: 0.06 });
+  },
   // volleyball
   serve(t) {
     tone(t, 300, { dur: 0.1, type: 'triangle', to: 180, vol: 0.32 });
