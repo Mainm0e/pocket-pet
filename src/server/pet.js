@@ -336,7 +336,7 @@ export function act(pet, action, arg, now) {
       if (pet.feedLog.length >= 3) {
         c.health -= 4;
         c.happiness -= 2;
-        res = { ok: false, say: 'Too full...', fx: 'refuse' };
+        res = { ok: false, say: 'Too full...', fx: 'refuse', mad: true };
         break;
       }
       c.health += 10;
@@ -380,7 +380,7 @@ export function act(pet, action, arg, now) {
       const hates = q === 'hates_baths';
       c.happiness += hates ? -8 : 4;
       const g = gainTrait(pet, 'calm', 2, now);
-      res = { ok: true, say: hates ? 'Hmph! I hate baths!' : 'Bubbles!', fx: 'bath', gain: { calm: g } };
+      res = { ok: true, say: hates ? 'Hmph! I hate baths!' : 'Bubbles!', fx: 'bath', gain: { calm: g }, mad: hates };
       break;
     }
     case 'sleep': {
@@ -390,7 +390,7 @@ export function act(pet, action, arg, now) {
         pet.wokeAt = now;
         if (c.energy < 50) {
           c.happiness -= 5;
-          res = { ok: true, say: 'Five more minutes...', fx: 'wake' };
+          res = { ok: true, say: 'Five more minutes...', fx: 'wake', mad: true };
         } else res = { ok: true, say: 'Good morning!', fx: 'wake' };
         break;
       }

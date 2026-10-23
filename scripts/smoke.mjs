@@ -163,6 +163,17 @@ try {
   await shot('06b-greet');
   await wait(3000);
 
+  // ---- the anime angry face: overfeed it ----
+  for (let i = 0; i < 4 && !(await page.evaluate(() => window.__sfx.includes('grr'))); i++) {
+    await care('Feed').click();
+    await wait(700);
+  }
+  const mad = await page.waitForFunction(() => window.__sfx.includes('grr'), null, { timeout: software ? 30000 : 5000 }).then(() => true, () => false);
+  check(mad, 'an overfed pet gets mad (anime angry face)');
+  await wait(300);
+  await shot('04a-mad');
+  await wait(2500);
+
   // ---- growing up with the dev clock ----
   const dev = async (label) => {
     if (!(await page.locator('.panel').count())) await page.locator('.toggle').click();

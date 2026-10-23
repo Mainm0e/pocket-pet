@@ -190,12 +190,12 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
   };
 
   // ---------- particles ----------
-  function emit(kind, pos, { v = [0, 0.8, 0], spread = 0.3, life = 1.4, size = 0.16, g = -0.4, n = 1, wob = true } = {}) {
+  function emit(kind, pos, { v = [0, 0.8, 0], spread = 0.3, life = 1.4, size = 0.16, g = -0.4, n = 1, wob = true, pulse = false } = {}) {
     for (let i = 0; i < n; i++) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: particleTex(kind), transparent: true, depthWrite: false }));
       s.position.set(pos.x + (Math.random() - 0.5) * spread, pos.y + Math.random() * spread * 0.5, pos.z + (Math.random() - 0.5) * spread * 0.5);
       scene.add(s);
-      sparks.push({ s, v: new THREE.Vector3(v[0] + (Math.random() - 0.5) * 0.4, v[1] * (0.7 + Math.random() * 0.5), v[2]), g, life: life * (0.8 + Math.random() * 0.4), age: 0, sz: size, wob });
+      sparks.push({ s, v: new THREE.Vector3(v[0] + (Math.random() - 0.5) * 0.4, v[1] * (0.7 + Math.random() * 0.5), v[2]), g, life: life * (0.8 + Math.random() * 0.4), age: 0, sz: size, wob, pulse });
     }
   }
   const headPos = (up = 0) => new THREE.Vector3(M.x, (model?.parts.topY ?? 1) + up, M.z);
@@ -573,9 +573,25 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
     busy(2.5);
   }
 
-  function play(fx) {
+  /** The anime angry face for a moment: V brows, gritted teeth and a pulsing 💢 by its head. */
+  function getMad(sec = 2.2, mark = true) {
+    if (!model) return;
+    model.parts.setExpression?.('mad');
+    if (mark) {
+      emit('anger', new THREE.Vector3(M.x + 0.3, model.parts.topY - 0.05, M.z + 0.15), { v: [0, 0, 0], g: 0, spread: 0, life: sec, size: 0.3, wob: false, pulse: true });
+      sound('grr');
+    }
+    const tok = ++madTok;
+    after(sec, () => tok === madTok && model?.parts.setExpression?.('normal'));
+  }
+  let madTok = 0;
+
+  function play(fx, { mad = false } = {}) {
     if (!model) return;
     M.idleUntil = 0;
+    madTok++;
+    model.parts.setExpression?.('normal'); // every scene starts from the everyday face
+    if (mad) getMad();
     switch (fx) {
       case 'wobble':
         M.shake = 1;
@@ -679,13 +695,20 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         busy(3);
         faceYou();
         let n = 0;
+        model.parts.setExpression?.('mad'); // gritted teeth: effort!
         const rep = () => {
           kick(-0.6);
           sound('hup');
           after(0.15, () => hop(2.6));
           emit('drop', headPos(0.1), { v: [0.6, 0.6, 0], g: -2, size: 0.1, life: 0.8 });
           if (++n < 3) after(0.75, rep);
-          else after(0.7, () => (emit('star', headPos(), { n: 3, v: [0, 1.2, 0] }), sound('sparkle')));
+          else
+            after(0.7, () => {
+              emit('star', headPos(), { n: 3, v: [0, 1.2, 0] });
+              sound('sparkle');
+              if (model?.parts.fierce) getMad(1.4); // a Strong pet gets all fired up
+              else model?.parts.setExpression?.('normal');
+            });
         };
         rep();
         break;
@@ -1096,7 +1119,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       if (q.wob) q.s.position.x += Math.sin(q.age * 6) * 0.004;
       const k = q.age / q.life;
       q.s.material.opacity = k < 0.15 ? k / 0.15 : 1 - Math.max(0, (k - 0.6) / 0.4);
-      const sc = q.sz * (k < 0.15 ? 0.5 + k / 0.3 : 1);
+      const sc = q.sz * (k < 0.15 ? 0.5 + k / 0.3 : 1) * (q.pulse && !reduced ? 1 + 0.18 * Math.abs(Math.sin(q.age * 9)) : 1);
       q.s.scale.set(sc, sc, sc);
     }
     renderer.render(scene, camera);

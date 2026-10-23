@@ -61,7 +61,7 @@ export const SEASON = { id: 1, species: 'mochi', name: 'Season 1 · Mochi' };
 // Body shape at Teen (top trait) and feature at Adult (second trait).
 // Fallback form names (each species' gene table has its own FORMS).
 export const FORMS = {
-  strong: { noun: 'Champling', adj: 'Mighty', bodyDesc: 'Determined brows', featureDesc: 'A tiny fang grin' },
+  strong: { noun: 'Champling', adj: 'Mighty', bodyDesc: 'Sharp, determined brows', featureDesc: 'Fighting spirit (gets fired up 💢)' },
   playful: { noun: 'Boingling', adj: 'Bouncy', bodyDesc: 'Happy brows, sparkly eyes', featureDesc: 'Curly tail' },
   tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby, with puffy cheeks', featureDesc: 'Chunky feet' },
   calm: { noun: 'Dozeling', adj: 'Dreamy', bodyDesc: 'Tall, with a serene face', featureDesc: 'Halo' },

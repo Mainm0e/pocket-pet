@@ -78,7 +78,7 @@
   });
   $effect(() => {
     const f = game.fx;
-    if (stage && f) untrack(() => stage.play(f.name));
+    if (stage && f) untrack(() => stage.play(f.name, { mad: f.mad }));
   });
   $effect(() => {
     stage?.setPaused(!!(game.battleOpen || game.evolution));

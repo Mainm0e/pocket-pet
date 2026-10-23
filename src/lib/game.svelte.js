@@ -84,9 +84,10 @@ class Game {
     setTimeout(() => this.bubble?.id === id && (this.bubble = null), ms);
   }
 
-  play(name, ms = 1100) {
+  /** `mad`: the pet shows its anime angry face (💢) with this scene. */
+  play(name, ms = 1100, mad = false) {
     const id = ++seq;
-    this.fx = { name, id };
+    this.fx = { name, id, mad };
     setTimeout(() => this.fx?.id === id && (this.fx = null), ms);
   }
 
@@ -102,7 +103,7 @@ class Game {
     const r = res.result;
     if (r) {
       if (r.say) this.say(r.say);
-      if (r.fx) this.play(r.fx, r.fx === 'eat' ? 1500 : 1100);
+      if (r.fx) this.play(r.fx, r.fx === 'eat' ? 1500 : 1100, !!r.mad);
       if (r.ok && (r.fx === 'sleep' || r.fx === 'wake')) sfx(r.fx); // the rest are timed by the 3D stage
     }
     return r;

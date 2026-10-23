@@ -155,13 +155,13 @@ export async function createCourt(canvas, { onSound } = {}) {
 
   // ---------- particles ----------
   const sparks = [];
-  function emit(kind, pos, { v = [0, 0.8, 0], spread = 0.25, life = 1.1, size = 0.14, g = -0.4, n = 1 } = {}) {
-    if (reduced && kind !== 'puff') return;
+  function emit(kind, pos, { v = [0, 0.8, 0], spread = 0.25, life = 1.1, size = 0.14, g = -0.4, n = 1, pulse = false } = {}) {
+    if (reduced && kind !== 'puff' && kind !== 'anger') return; // (the anger mark is part of the face, so it stays)
     for (let i = 0; i < n; i++) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: particleTex(kind), transparent: true, depthWrite: false }));
       s.position.set(pos.x + (Math.random() - 0.5) * spread, pos.y + Math.random() * spread * 0.5, pos.z + (Math.random() - 0.5) * spread * 0.5);
       scene.add(s);
-      sparks.push({ s, v: new THREE.Vector3(v[0] + (Math.random() - 0.5) * 0.4, v[1] * (0.7 + Math.random() * 0.5), v[2]), g, life: life * (0.8 + Math.random() * 0.4), age: 0, sz: size });
+      sparks.push({ s, v: new THREE.Vector3(v[0] + (Math.random() - 0.5) * 0.4, v[1] * (0.7 + Math.random() * 0.5), v[2]), g, life: life * (0.8 + Math.random() * 0.4), age: 0, sz: size, pulse });
     }
   }
   const sandPuff = (n = 3) => emit('puff', new THREE.Vector3(ball.position.x, 0.1, ball.position.z), { n, size: 0.22, life: 0.6, v: [0, 0.5, 0] });
@@ -193,6 +193,19 @@ export async function createCourt(canvas, { onSound } = {}) {
     p.sv += 1.4;
   }
   const kick = (p, a) => (p.sv += a * 8);
+  /** The anime angry face for a moment (V brows, gritted teeth), with a pulsing 💢 by its head. */
+  function getMad(p, sec = 1.6, mark = true) {
+    const m = p.model;
+    if (!m) return;
+    m.parts.setExpression?.('mad');
+    if (mark) {
+      emit('anger', new THREE.Vector3(p.x - DIR[p.side] * 0.25, p.h + p.y - 0.05, p.z + 0.25), { v: [0, 0, 0], g: 0, spread: 0, life: sec, size: 0.3, pulse: true });
+      sound('grr');
+    }
+    const tok = (p.madTok = (p.madTok ?? 0) + 1);
+    after(sec, () => p.madTok === tok && p.model?.parts.setExpression?.('normal'));
+  }
+  let lastPoint = { side: null, run: 0 }; // to notice the other side scoring again and again
   /** Tip over toward (dx, dz): a dive, a lunge. */
   function tip(p, dx, dz, amount = 0.6) {
     const l = Math.hypot(dx, dz) || 1;
@@ -271,8 +284,8 @@ export async function createCourt(canvas, { onSound } = {}) {
               sound('calm');
             } else {
               p.shake = 1;
-              if (e.sulk) emit('drop', headPos(p, 0.05), { v: [0.3 * DIR[e.side], 0.3, 0], g: -1.5, size: 0.1 });
-              sound('refuse');
+              if (e.sulk) getMad(p, 1.8); // won't listen, and it's cross about it
+              else sound('refuse');
             }
           });
           // plays alongside the rally: the ball doesn't wait for it
@@ -311,7 +324,10 @@ export async function createCourt(canvas, { onSound } = {}) {
             onEvent?.(e);
             if (e.shot !== 'bump') tip(p, dir, 0, 0.35);
             sound(e.shot === 'spike' ? 'spike' : e.shot === 'serve' ? 'serve' : 'bump');
-            if (e.shot === 'spike' && !e.fault) emit('sparkle', ball.position, { n: 3, spread: 0.2, size: 0.12 });
+            if (e.shot === 'spike' && !e.fault) {
+              emit('sparkle', ball.position, { n: 3, spread: 0.2, size: 0.12 });
+              if (p.model?.parts.fierce) getMad(p, 0.9); // a Strong pet's battle face
+            }
             if (e.fault === 'net') {
               fly(new THREE.Vector3(-dir * (BALL_R + 0.03), 0.8, e.aim * 0.6), 0.5, 0.3, () => {
                 sound('thud');
@@ -373,6 +389,9 @@ export async function createCourt(canvas, { onSound } = {}) {
             after(0.45, () => hop(w, 2));
             emit('star', headPos(w), { n: 2, v: [0, 1.1, 0] });
             kick(l, -0.5);
+            // the other side scored again? grr!
+            lastPoint = lastPoint.side === e.side ? { side: e.side, run: lastPoint.run + 1 } : { side: e.side, run: 1 };
+            if (lastPoint.run >= 2) after(0.25, () => getMad(l, 1.4));
           });
           if (!events.some((n) => n.type === 'end')) at(t + 0.9, () => resetRally(e.side));
           t += 1.8;
@@ -565,7 +584,7 @@ export async function createCourt(canvas, { onSound } = {}) {
       q.s.position.addScaledVector(q.v, dt);
       const k = q.age / q.life;
       q.s.material.opacity = k < 0.15 ? k / 0.15 : 1 - Math.max(0, (k - 0.6) / 0.4);
-      const sc = q.sz * (k < 0.15 ? 0.5 + k / 0.3 : 1);
+      const sc = q.sz * (k < 0.15 ? 0.5 + k / 0.3 : 1) * (q.pulse && !reduced ? 1 + 0.18 * Math.abs(Math.sin(q.age * 9)) : 1);
       q.s.scale.set(sc, sc, sc);
     }
     renderer.render(scene, camera);
