@@ -9,12 +9,25 @@
 
   const params = new URLSearchParams(location.search);
   const dev = params.has('dev');
+  const remindersMaybeOn = () => {
+    try {
+      return localStorage.getItem('pocketpet.reminders') === '1';
+    } catch {
+      return false;
+    }
+  };
   const lab = params.has('lab') || params.has('gallery');
   game.load();
 
   // Re-sync when the player comes back; the server works out what happened meanwhile.
   $effect(() => {
-    const onVis = () => document.visibilityState === 'visible' && game.load();
+    const onVis = () => {
+      if (document.visibilityState === 'visible') {
+        game.load();
+        if (remindersMaybeOn()) import('./lib/reminders.js').then((m) => m.onShow());
+      } else if (remindersMaybeOn()) import('./lib/reminders.js').then((m) => m.onHide()); // leaving: hand the next reminders to the service worker
+    };
+    if (dev) window.__reminders = () => import('./lib/reminders.js').then((m) => m.devTools); // for tests
     document.addEventListener('visibilitychange', onVis);
     const iv = setInterval(() => document.visibilityState === 'visible' && game.load(), 60_000);
     return () => {

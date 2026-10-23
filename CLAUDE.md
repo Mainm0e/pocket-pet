@@ -31,7 +31,8 @@ src/server/        THE GAME RULES. The only code that changes game state.
   constants.js     tuning knobs (decay, caps, stage gates, marks, quirks)
   genome/          seed code -> DNA. FROZEN tables per species+generation (see docs/DNA.md)
 src/lib/           api.js (the ONLY door from UI to server), game.svelte.js (reactive UI store),
-                   sound.js (sfx(name) + mute pref) -> synth.js (Web Audio, lazy chunk loaded on first tap)
+                   sound.js (sfx(name) + mute pref) -> synth.js (Web Audio, lazy chunk loaded on first tap),
+                   reminders.js (notifications: forecast -> service worker; lazy)
 src/components/    Svelte 5 UI: Room, sheets, PetCard, Quiz, Evolution, Battle, Decorate, SeedLab, DevPanel
 src/species/       species art, lazy-loaded per species
   <species>/sculpt.js   pure-JS SDF sculpt (runs in sculpt.worker.js; NO Three.js imports)
@@ -105,7 +106,7 @@ Data flow: UI → `api.*()` → server mutates `db` → returns `{ state, events
 
 1. **Real backend (Supabase):** move `src/server/*` handlers to Edge Functions, store `db` in Postgres with a unique constraint on `pets.code`, add auth, and keep `lib/api.js` as the only client change.
 2. **Real friends:** friend list, visits ("friends can visit and feed each other's pets"), real volleyball matches instead of simulated friends, and friends-only leaderboards.
-3. **Push notifications** ("Your pet is hungry!") through the PWA service worker.
+3. **Push notifications:** best effort is done. Reminders (More → 🔔) come from `forecast()` in pet.js; `lib/reminders.js` saves them for `public/sw.js`, which shows what's due when Chrome wakes the installed app (Periodic Background Sync) or while the page is alive in the background. Next: real Web Push from the backend (send the same forecast list; works on iPhone Home Screen apps too).
 4. ~~**Sound**~~ (done): Web Audio sounds for care, hatching, evolving and battles, with a mute toggle in More. Next: optional background music.
 5. **Season 2:** turn Shiba (or Sprout, Ember pup, Puddle or Pebble) into a full season species, with lazy-loaded art.
 6. **Fusion:** two adults make a hybrid egg. Use a new code generation that takes both parents' DNA, and allow one fusion per pet per season.

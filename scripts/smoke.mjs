@@ -56,7 +56,7 @@ const args = software
   ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
   : ['--use-angle=gl-egl', '--enable-gpu', '--ignore-gpu-blocklist'];
 const browser = await chromium.launch({ executablePath: findChromium(), args });
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, permissions: ['notifications'] });
 const page = await ctx.newPage();
 // software WebGL (CI) is slow: be patient with navigation and long waits
 page.setDefaultTimeout(software ? 45000 : 20000);
@@ -255,6 +255,17 @@ try {
   check((await page.locator('.bond').textContent()).includes('listens'), 'match screen shows how well the pet listens');
   await shot('10-battle-pick');
   await page.locator('.fight').first().click();
+  await wait(1500);
+  if (await page.locator('.pick .error', { hasText: 'sleep' }).count()) {
+    // it nodded off on its own meanwhile: wake it and try again
+    await page.getByRole('button', { name: 'Close' }).first().click();
+    await wait(800);
+    if (await page.locator('.actions button.active').count()) await care('Wake').click();
+    await wait(1500);
+    await more('Volleyball');
+    await wait(2500);
+    await page.locator('.fight').first().click();
+  }
   await page.waitForFunction(() => !!window.__court, null, { timeout: 120000 });
   await page.locator('.moves button', { hasText: 'Cheer' }).click();
   await wait(5000);
@@ -323,7 +334,24 @@ try {
   await wait(400);
   check(await btn('Turn sound on').isVisible(), 'mute is remembered after a reload');
   await btn('Turn sound on').click();
+
+  // ---- reminders ----
+  await btn('Turn reminders on').click();
+  await wait(1000);
+  check(await btn('Turn reminders off').isVisible(), 'reminders can be turned on');
   await btn('Close').click();
+  // The game plans what's coming; the service worker picks what's due. Pretend it's 2 days later
+  // and ask it (dry run: this headless browser can't actually show notifications).
+  const reminded = await page.evaluate(async () => {
+    const tools = await window.__reminders();
+    const planned = (await tools.save()).map((i) => i.title);
+    const reg = await navigator.serviceWorker.ready;
+    const answer = new Promise((res) => navigator.serviceWorker.addEventListener('message', (e) => e.data?.type === 'reminders-checked' && res(e.data.titles)));
+    reg.active.postMessage({ type: 'check-reminders', now: Date.now() + 2 * 86400_000, dry: true });
+    const due = await Promise.race([answer, new Promise((res) => setTimeout(() => res(null), 8000))]);
+    return { planned, due };
+  });
+  check(reminded.planned.length > 0 && reminded.due?.length === reminded.planned.length, `reminders are planned and the service worker would show them (${reminded.planned.join(' | ')})`);
 
   // ---- seed lab ----
   await page.goto(`${URL}/?lab&seed=MO1-3E&stage=adult&top=playful&second=calm&yaw=0.4`, { waitUntil: 'domcontentloaded' });

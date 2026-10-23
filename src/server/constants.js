@@ -46,6 +46,17 @@ export const WISHES = {
 };
 export const WISH_PATS = 3; // pats needed for the 'pat' wish
 export const GREET_AWAY = 30 * 60_000; // away this long and the pet greets you when you come back
+
+// Reminders (notifications): what the pet will need next, from the same rules that run the game.
+export const REMINDERS = {
+  HOURS: 24, // how far ahead to look
+  PER_DAY: 3, // never more than this
+  QUIET_FROM: 21, // no reminders 21:00..08:00 (they move to 08:00)
+  QUIET_TO: 8,
+  WISH_AT: 18, // "still wishing..." at 18:00 if today's wish isn't granted
+  HUNGRY_AFTER: 8 * 3600_000, // same as the care rules
+  LONELY_BELOW: 35, // happiness
+};
 export const BOND_LEVELS = [
   [75, 'Best friends'],
   [50, 'Good friends'],

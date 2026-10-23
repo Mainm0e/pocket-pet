@@ -4,7 +4,7 @@ import { decode } from './genome/index.js';
 import {
   HOUR, DAY, CARE_KEYS, CARE_FLOOR, CARE_MAX, TRAITS, TRAIT_CAP, DAILY_TRAIT_GAIN, TALENT_MULT,
   HATCH_TAPS, TEEN_AGE, TEEN_TRAITS, ADULT_AGE, ADULT_TRAITS, MAX_CATCHUP, MAX_POOPS, FORMS, SEASON, BOND,
-  WISHES, WISH_PATS,
+  WISHES, WISH_PATS, REMINDERS,
 } from './constants.js';
 
 // ---------- time helpers (player's local day) ----------
@@ -103,6 +103,50 @@ export function gainTrait(pet, trait, base, t) {
   pet.traits[trait] += give;
   pet.daily.traitGain += give / mult;
   return give;
+}
+
+// ---------- reminders ----------
+/**
+ * What the pet will need next, worked out by replaying the normal rules forward on a copy
+ * (nothing changes). Returns [{ id, kind, at }] for: hungry, lonely, mess, wish.
+ * Night times move to the morning; at most REMINDERS.PER_DAY.
+ */
+export function forecast(pet, now) {
+  if (pet.stage === 'egg') return [];
+  const R = REMINDERS;
+  const sim = JSON.parse(JSON.stringify(pet));
+  const found = {};
+  const STEP = HOUR / 2;
+  for (let t = now + STEP; t <= now + R.HOURS * HOUR; t += STEP) {
+    catchUp(sim, t);
+    if (!found.hungry && (t - sim.lastFed > R.HUNGRY_AFTER || sim.care.health < 35)) found.hungry = t;
+    if (!found.lonely && !sim.asleep && sim.care.happiness < R.LONELY_BELOW) found.lonely = t;
+    if (!found.mess && sim.poops.length > pet.poops.length) found.mess = t;
+  }
+  // today's wish, if it's still waiting by the evening
+  const day = dayKey(now);
+  const wishDone = pet.daily.day === day && pet.daily.wishDone;
+  const evening = new Date(now);
+  evening.setHours(R.WISH_AT, 0, 0, 0);
+  if (!wishDone && evening.getTime() > now) found.wish = evening.getTime();
+  // quiet hours: move to the next morning
+  const awake = (t) => {
+    const d = new Date(t);
+    const h = d.getHours();
+    if (h >= R.QUIET_FROM || h < R.QUIET_TO) {
+      if (h >= R.QUIET_FROM) d.setDate(d.getDate() + 1);
+      d.setHours(R.QUIET_TO, 0, 0, 0);
+    }
+    return d.getTime();
+  };
+  const out = Object.entries(found)
+    .map(([kind, at]) => ({ kind, at: awake(at) }))
+    .filter((r) => r.at - now >= 15 * 60_000) // the player is here right now anyway
+    .sort((a, b) => a.at - b.at);
+  const perDay = {};
+  return out
+    .filter((r) => (perDay[dayKey(r.at)] = (perDay[dayKey(r.at)] ?? 0) + 1) <= R.PER_DAY)
+    .map((r) => ({ id: `${r.kind}:${dayKey(r.at)}`, ...r }));
 }
 
 // ---------- the daily wish ----------

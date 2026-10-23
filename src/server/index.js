@@ -11,7 +11,7 @@ import {
 import {
   newPet, catchUp, recordVisit, checkEvolution, act as petAct, hatchTap as petHatchTap,
   title, dnaString, playStats, obeyChance, moodModifier, growthProgress, traitTotal, dayKey,
-  weatherFor, isNight, addMark, genomeOf, gainBond, freshDaily, wishFor, grantWish,
+  weatherFor, isNight, addMark, genomeOf, gainBond, freshDaily, wishFor, grantWish, forecast,
 } from './pet.js';
 import { decode, randomCode, nudgeCode, codeFromNumber, normalizeCode } from './genome/index.js';
 import { createBattle, stepBattle, makeFriendPet } from './battle.js';
@@ -281,6 +281,22 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
         rewards.record = clone(b);
       }
       return respond(events, { battle, rewards });
+    },
+
+    /** What the pet will need next (for reminders). Read-only: it replays the rules on a copy. */
+    forecast() {
+      const pet = active();
+      if (!pet || pet.stage === 'egg') return respond([], { forecast: [] });
+      const t = now();
+      const events = sync(pet, t);
+      const wish = pet.stage !== 'egg' ? WISHES[wishFor(pet, dayKey(t))] : null;
+      // the clock the forecast uses (dev mode can move it); the device needs real times
+      const shift = db.devOffset || 0;
+      return respond(events, {
+        forecast: forecast(pet, t).map((r) => ({ ...r, at: r.at - shift })),
+        name: pet.nickname || genomeOf(pet).name,
+        wish: wish?.label ?? null,
+      });
     },
 
     /** Save the room layout (cosmetic). Anything invalid is fixed, never stored as-is. */
