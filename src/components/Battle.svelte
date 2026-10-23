@@ -283,6 +283,7 @@
               ? `${myName()} is bouncing with pride.`
               : `${myName()} had fun anyway. Next time!`}
           </p>
+          {#if rewards.wish}<p class="reward">💖 Wish granted: it wanted a match! Bond +3</p>{/if}
           {#if rewards.bond > 0}<p class="reward">♥ Playing together grew your bond</p>{/if}
           {#each rewards.marks as m}<p class="reward">✨ New memory mark: <b>{MARKS[m].label}</b></p>{/each}
           {#each rewards.badges as b}<p class="reward">🏅 New badge: <b>{BADGES[b].label}</b></p>{/each}

@@ -211,10 +211,12 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
     return out;
   }
   const blocked = (x, z, pad = 0) => obstacles().some((o) => Math.hypot(x - o.x, z - o.z) < o.r + petR + pad);
-  function freeSpot() {
+  /** A free spot to wander to. `near` > 0 prefers the front (close to you), < 0 the back. */
+  function freeSpot(near = 0) {
     for (let i = 0; i < 24; i++) {
       const x = (Math.random() * 2 - 1) * BOUNDS.x;
-      const z = BOUNDS.zMin + 0.3 + Math.random() * (BOUNDS.zMax - BOUNDS.zMin - 0.3);
+      const k = near > 0 ? 1 - Math.random() ** (1 + near * 2) : Math.random() ** (1 - near * 2);
+      const z = BOUNDS.zMin + 0.3 + k * (BOUNDS.zMax - BOUNDS.zMin - 0.3);
       if (!blocked(x, z, 0.06)) return [x, z];
     }
     return [0, 0.3];
@@ -453,7 +455,9 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
     switch (b) {
       case 'walk': {
         const s = model.stage === 'baby' ? 0.32 : temperament === 'bold' ? 0.7 : temperament === 'shy' ? 0.42 : 0.55;
-        const [wx, wz] = freeSpot();
+        // close pets like to be near you; shy ones keep their distance
+        const bond = roomState.bond ?? 50;
+        const [wx, wz] = freeSpot(bond >= 60 ? (bond - 60) / 40 : bond < 30 ? -(30 - bond) / 30 : 0);
         walkTo(wx, wz, s, faceYou);
         dur = 3.4;
         break;
@@ -705,6 +709,65 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         after(2.8, () => (emit('sparkle', headPos(), { n: 4, spread: 0.8 }), sound('sparkle')));
         break;
       }
+      // coming back after a while: how warm the welcome is depends on the bond
+      case 'greetBest':
+        busy(4);
+        walkTo(M.x * 0.3, BOUNDS.zMax - 0.05, 0.95, () => {
+          faceYou();
+          hop(2.4);
+          after(0.5, () => hop(2.2));
+          M.tWag = 1;
+          emit('heart', headPos(), { n: 4, v: [0, 1, 0] });
+          sound('giggle', 0.1);
+          after(2, () => (M.tWag = 0.3));
+        });
+        break;
+      case 'greetGood':
+        busy(3);
+        walkTo(M.x * 0.5, BOUNDS.zMax - 0.4, 0.65, () => {
+          faceYou();
+          hop(1.8);
+          M.tWag = 1;
+          emit('heart', headPos(), { n: 2, v: [0, 1, 0] });
+          after(1.6, () => (M.tWag = 0.3));
+        });
+        break;
+      case 'greetOk':
+        busy(2);
+        faceYou();
+        M.tHeadTilt = 0.3;
+        hop(1.4);
+        emit('note', headPos(), { n: 1, v: [0, 1, 0] });
+        after(1.2, () => (M.tHeadTilt = 0));
+        break;
+      case 'greetShy': {
+        // backs off a little, turns away... then peeks
+        busy(3.5);
+        const z = Math.max(BOUNDS.zMin + 0.3, M.z - 0.6);
+        walkTo(M.x, z, 0.4, () => {
+          M.tYaw = camAngle() + Math.PI * 0.8;
+          emit('drop', headPos(0.05), { v: [0.3, 0.3, 0], g: -1.5, size: 0.1 });
+          after(1.4, () => {
+            faceYou();
+            M.tHeadTilt = -0.35;
+          });
+          after(2.6, () => (M.tHeadTilt = 0));
+        });
+        break;
+      }
+      case 'wish':
+        busy(2.5);
+        faceYou();
+        hop(2.6);
+        after(0.55, () => hop(2));
+        spin(0.8);
+        M.tWag = 1;
+        emit('heart', headPos(), { n: 5, spread: 0.6, v: [0, 1.1, 0] });
+        emit('sparkle', headPos(), { n: 4, spread: 0.6 });
+        sound('chime');
+        sound('giggle', 0.35);
+        after(1.6, () => (M.tWag = 0.3));
+        break;
       case 'refuse':
         M.headShake = 1;
         sound('refuse');
@@ -1397,6 +1460,12 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       const it = items.get(id);
       if (!it) return null;
       const v = it.group.position.clone().setY(0.15).project(camera);
+      const r = canvas.getBoundingClientRect();
+      return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height };
+    },
+    /** For tests: where the pet is on screen (page px), to tap it. */
+    screenPosOfPet() {
+      const v = new THREE.Vector3(M.x, 0.35, M.z).project(camera);
       const r = canvas.getBoundingClientRect();
       return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height };
     },

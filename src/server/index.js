@@ -6,11 +6,12 @@
 import { hashString, mulberry32 } from './rng.js';
 import {
   SEASON, BATTLES_PER_DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, TALENT_MULT, DAY, BOND, MATCH_POINTS, bondLabel,
+  WISHES, WISH_PATS, GREET_AWAY,
 } from './constants.js';
 import {
   newPet, catchUp, recordVisit, checkEvolution, act as petAct, hatchTap as petHatchTap,
   title, dnaString, playStats, obeyChance, moodModifier, growthProgress, traitTotal, dayKey,
-  weatherFor, isNight, addMark, genomeOf, gainBond, freshDaily,
+  weatherFor, isNight, addMark, genomeOf, gainBond, freshDaily, wishFor, grantWish,
 } from './pet.js';
 import { decode, randomCode, nudgeCode, codeFromNumber, normalizeCode } from './genome/index.js';
 import { createBattle, stepBattle, makeFriendPet } from './battle.js';
@@ -94,6 +95,12 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
     v.playStats = pet.stage === 'egg' ? null : playStats(pet);
     v.bondLabel = bondLabel(pet.bond);
     v.obey = obeyChance(pet);
+    if (pet.stage !== 'egg') {
+      const kind = wishFor(pet, dayKey(t));
+      const done = pet.daily.day === dayKey(t) && pet.daily.wishDone;
+      v.wish = { kind, ...WISHES[kind], done, pats: kind === 'pat' ? Math.min(WISH_PATS, pet.daily.day === dayKey(t) ? pet.daily.pats : 0) : null, need: WISH_PATS };
+    }
+    delete v.lastSeen;
     v.mood = moodModifier(pet);
     v.growth = growthProgress(pet, t);
     v.battlesLeft = BATTLES_PER_DAY - (pet.daily.day === dayKey(t) ? pet.daily.battles : 0);
@@ -115,6 +122,11 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
       room: db.room ?? DEFAULT_ROOM,
       devOffset: db.devOffset,
     };
+  }
+
+  /** The player was here (the dev clock skipping ahead doesn't count). */
+  function seen(pet = active()) {
+    if (pet && pet.stage !== 'egg') pet.lastSeen = now();
   }
 
   function respond(events = [], extra = {}) {
@@ -141,7 +153,15 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
 
   return {
     getState() {
-      return respond(sync(active(), now()));
+      const pet = active();
+      const t = now();
+      const events = sync(pet, t);
+      // Back after a while? The pet greets you (how warmly depends on the bond).
+      if (pet && pet.stage !== 'egg') {
+        if (pet.lastSeen && t - pet.lastSeen >= GREET_AWAY && !pet.asleep) events.push({ type: 'greet', away: t - pet.lastSeen, bond: pet.bond });
+        seen(pet);
+      }
+      return respond(events);
     },
 
     startEgg(answers) {
@@ -156,7 +176,9 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
     hatchTap() {
       const pet = active();
       if (!pet) return respond();
-      return respond(petHatchTap(pet, now()).events);
+      const events = petHatchTap(pet, now()).events;
+      seen(pet);
+      return respond(events);
     },
 
     rename(name) {
@@ -172,6 +194,8 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
       const t = now();
       const events = sync(pet, t);
       const result = petAct(pet, action, arg, t);
+      if (result?.ok) events.push(...grantWish(pet, action, t));
+      seen(pet);
       events.push(...checkEvolution(pet, t));
       return respond(events, { result });
     },
@@ -251,6 +275,7 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
         }
         pet.care.energy = Math.max(5, pet.care.energy - 6);
         rewards.bond = gainBond(pet, BOND.MATCH, t);
+        rewards.wish = grantWish(pet, 'match', t).length > 0;
         rewards.marks = markEvents.map((e) => e.mark);
         rewards.winner = battle.winner;
         rewards.record = clone(b);

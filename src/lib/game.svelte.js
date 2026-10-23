@@ -14,6 +14,7 @@ class Game {
   sheet = $state(null); // 'stats' | 'card' | 'more'
   battleOpen = $state(false);
   decorating = $state(false);
+  greet = $state(null); // { fx, line }: played by the room once the pet is on screen
 
   get pet() {
     return this.s?.pet ?? null;
@@ -50,6 +51,21 @@ class Game {
         break;
       case 'rareSpecies':
         this.showToast(`Something glows... a 1 in ${Math.round(1 / e.odds).toLocaleString('en')} egg!`);
+        break;
+      case 'greet': {
+        const b = e.bond;
+        const [fx, lines] =
+          b >= 75 ? ['greetBest', ["You're back!!", 'I missed you SO much!', 'Yay! Yay! You came back!']]
+          : b >= 50 ? ['greetGood', ['Hi! I missed you!', 'Welcome back!', 'There you are!']]
+          : b >= 25 ? ['greetOk', ['Oh! Hi there.', 'You came back!', 'Hello again!']]
+          : ['greetShy', ['...hi.', '*peeks*', "Oh... it's you."]];
+        this.greet = { fx, line: lines[Math.floor(Math.random() * lines.length)] };
+        break;
+      }
+      case 'wish':
+        this.play('wish', 2500);
+        this.showToast(`Wish granted! ♥ Bond +${e.bond}`);
+        setTimeout(() => this.say(['Thank you!!', 'You remembered!', 'Best day ever!'][Math.floor(Math.random() * 3)], 2400), 300);
         break;
       case 'hatched':
         this.play('hatch');

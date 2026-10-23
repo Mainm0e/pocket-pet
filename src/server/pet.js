@@ -4,6 +4,7 @@ import { decode } from './genome/index.js';
 import {
   HOUR, DAY, CARE_KEYS, CARE_FLOOR, CARE_MAX, TRAITS, TRAIT_CAP, DAILY_TRAIT_GAIN, TALENT_MULT,
   HATCH_TAPS, TEEN_AGE, TEEN_TRAITS, ADULT_AGE, ADULT_TRAITS, MAX_CATCHUP, MAX_POOPS, FORMS, SEASON, BOND,
+  WISHES, WISH_PATS,
 } from './constants.js';
 
 // ---------- time helpers (player's local day) ----------
@@ -72,7 +73,7 @@ export function rankTraits(traits, talent) {
   });
 }
 
-export const freshDaily = (day) => ({ day, traitGain: 0, battles: 0, bond: 0, pats: 0 });
+export const freshDaily = (day) => ({ day, traitGain: 0, battles: 0, bond: 0, pats: 0, wishDone: false });
 
 function ensureDay(pet, t) {
   const key = dayKey(t);
@@ -102,6 +103,39 @@ export function gainTrait(pet, trait, base, t) {
   pet.traits[trait] += give;
   pet.daily.traitGain += give / mult;
   return give;
+}
+
+// ---------- the daily wish ----------
+/** Today's wish, from the pet's code and the date. Its personality tips the odds. */
+export function wishFor(pet, day) {
+  const q = pet.dna.quirk;
+  const tal = pet.dna.talent;
+  const w = {
+    feed: 2 * (q === 'snack_lover' ? 3 : 1) * (tal === 'tough' ? 1.5 : 1),
+    play: 2 * (tal === 'playful' ? 1.5 : 1),
+    bath: q === 'hates_baths' ? 0 : 1.5 * (tal === 'calm' ? 1.5 : 1) * (q === 'neat_freak' ? 1.5 : 1),
+    train: 1.5 * (tal === 'strong' ? 1.5 : 1),
+    pat: 2,
+    match: 1.5,
+  };
+  const keys = Object.keys(WISHES);
+  const total = keys.reduce((s, k) => s + w[k], 0);
+  let r = mulberry32(hashString(`wish:${pet.dna.code}:${day}`))() * total;
+  for (const k of keys) if ((r -= w[k]) < 0) return k;
+  return 'pat';
+}
+
+/** The player did `did` (an action that worked). Grants today's wish if that was it. */
+export function grantWish(pet, did, t) {
+  if (pet.stage === 'egg') return [];
+  ensureDay(pet, t);
+  const kind = wishFor(pet, pet.daily.day);
+  if (pet.daily.wishDone || kind !== did) return [];
+  if (kind === 'pat' && pet.daily.pats < WISH_PATS) return [];
+  pet.daily.wishDone = true;
+  pet.bond = Math.min(100, pet.bond + BOND.WISH);
+  pet.care.happiness = Math.min(CARE_MAX, pet.care.happiness + 5);
+  return [{ type: 'wish', kind, bond: BOND.WISH }];
 }
 
 // ---------- care ----------
