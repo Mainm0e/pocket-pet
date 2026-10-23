@@ -4,7 +4,6 @@
   import Quiz from './components/Quiz.svelte';
   import Naming from './components/Naming.svelte';
   import Evolution from './components/Evolution.svelte';
-  import Battle from './components/Battle.svelte';
   import DevPanel from './components/DevPanel.svelte';
   import SeedLab from './components/SeedLab.svelte';
 
@@ -37,7 +36,10 @@
 
 {#if game.naming}<Naming />{/if}
 {#if game.evolution && game.pet}<Evolution />{/if}
-{#if game.battleOpen && game.pet}<Battle />{/if}
+{#if game.battleOpen && game.pet}
+  <!-- the match screen loads on demand -->
+  {#await import('./components/Battle.svelte') then { default: Battle }}<Battle />{/await}
+{/if}
 {#if dev}<DevPanel />{/if}
 
 <style>

@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { createServer } from './index.js';
 import { createPersonality, QUIZ } from './dna.js';
 import { codeFromNumber } from './genome/index.js';
-import { newPet, catchUp, act, gainTrait, checkEvolution, dnaString, title, traitTotal } from './pet.js';
+import { newPet, catchUp, act, gainTrait, checkEvolution, dnaString, title, traitTotal, gainBond, obeyChance, recordVisit } from './pet.js';
 import { createBattle, stepBattle, makeFriendPet } from './battle.js';
-import { HOUR, DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, CARE_FLOOR, BATTLES_PER_DAY } from './constants.js';
+import { HOUR, DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, CARE_FLOOR, BATTLES_PER_DAY, BOND, MATCH_POINTS } from './constants.js';
 
 const memStorage = () => {
   const m = new Map();
@@ -112,44 +112,116 @@ describe('growth', () => {
   });
 });
 
-describe('battle', () => {
-  it('is deterministic for the same seed and moves', () => {
+const playMatch = (bt, strategy = () => null) => {
+  const log = [];
+  while (!bt.over) log.push(...stepBattle(bt, strategy(bt)));
+  return log;
+};
+// a sensible owner: cheer a nervous pet, calm an over-excited one
+const smart = (bt) => (bt.you.commanded ? null : bt.you.mood < -0.2 ? 'cheer' : bt.you.mood > 0.2 ? 'calm' : null);
+function build(main, total, bond = 50) {
+  const p = hatched(7);
+  p.dna.temperament = 'stubborn';
+  p.care = { happiness: 70, comfort: 70, health: 70, fitness: 70, energy: 70 };
+  for (const k in p.traits) p.traits[k] = main === 'even' ? total / 4 : k === main ? total * 0.7 : total * 0.1;
+  p.bond = bond;
+  return p;
+}
+const winRate = (a, b, n, strategy) => {
+  let w = 0;
+  for (let s = 1; s <= n; s++) if (playMatch(createBattle('t', a, b, s * 7919), strategy).at(-1).winner === 'you') w++;
+  return w / n;
+};
+
+describe('volleyball match', () => {
+  it('is deterministic for the same seed and commands', () => {
     const a = hatched(1);
     const b = makeFriendPet(a, '2026-10-18', 0);
-    const run = () => {
-      const bt = createBattle('t', a, b, 99);
-      const log = [];
-      while (!bt.over) log.push(...stepBattle(bt, bt.turn === 2 ? 'cheer' : null));
-      return log;
-    };
+    const run = () => playMatch(createBattle('t', a, b, 99), (bt) => (bt.touch === 2 ? 'cheer' : null));
     expect(run()).toEqual(run());
   });
-  it('weaker pets can sometimes win', () => {
-    const strong = hatched(1);
-    strong.traits = { tough: 20, playful: 10, strong: 30, calm: 10 };
-    const weak = hatched(2);
-    weak.traits = { tough: 15, playful: 10, strong: 22, calm: 10 };
-    weak.dna.temperament = strong.dna.temperament = 'stubborn';
-    let upsets = 0;
-    for (let s = 0; s < 300; s++) {
-      const bt = createBattle('t', weak, strong, s);
-      while (!bt.over) {
-        const y = bt.you;
-        const mv = y.moves.snack && y.hp < y.stats.hp * 0.4 ? 'snack' : bt.turn === 1 ? 'cheer' : bt.turn === 4 ? 'shield' : null;
-        stepBattle(bt, mv);
-      }
-      if (bt.winner === 'you') upsets++;
-    }
-    expect(upsets).toBeGreaterThan(10);
-    expect(upsets).toBeLessThan(150);
+  it('ends when a side reaches the match points', () => {
+    const a = hatched(1);
+    const bt = createBattle('t', a, makeFriendPet(a, 'd', 1), 3);
+    const log = playMatch(bt);
+    expect(Math.max(bt.score.you, bt.score.foe)).toBe(MATCH_POINTS);
+    expect(log.filter((e) => e.type === 'point')).toHaveLength(bt.score.you + bt.score.foe);
+    expect(log.at(-1)).toEqual({ type: 'end', winner: bt.winner });
   });
-  it('moves are one-time only', () => {
+  it('allows one command per point', () => {
     const a = hatched(1);
     const bt = createBattle('t', a, makeFriendPet(a, 'd', 0), 5);
-    const e1 = stepBattle(bt, 'snack');
-    const e2 = stepBattle(bt, 'snack');
-    expect(e1.some((e) => e.type === 'move')).toBe(true);
-    expect(e2.some((e) => e.type === 'move' && e.side === 'you')).toBe(false);
+    const e1 = stepBattle(bt, 'cheer');
+    const mine = (es) => es.filter((e) => e.type === 'command' && e.side === 'you');
+    expect(mine(e1)).toHaveLength(1);
+    if (!e1.some((e) => e.type === 'point')) expect(mine(stepBattle(bt, 'calm'))).toHaveLength(0);
+  });
+  it('a closer bond means the pet listens more', () => {
+    const listened = (bond) => {
+      const p = build('even', 70, bond);
+      let ok = 0;
+      let asked = 0;
+      for (let s = 1; s <= 200; s++) {
+        const bt = createBattle('t', p, build('even', 70), s);
+        for (const e of stepBattle(bt, 'cheer')) if (e.type === 'command' && e.side === 'you') (asked++, e.ok && ok++);
+      }
+      return ok / asked;
+    };
+    expect(listened(10)).toBeLessThan(0.45);
+    expect(listened(90)).toBeGreaterThan(0.8);
+  });
+  it('good commands with a strong bond help, spamming Cheer backfires', () => {
+    const foe = build('even', 70);
+    const none = winRate(build('even', 70, 90), foe, 300);
+    expect(winRate(build('even', 70, 90), foe, 300, smart)).toBeGreaterThan(none + 0.05);
+    expect(winRate(build('even', 70, 90), foe, 300, (bt) => (bt.you.commanded ? null : 'cheer'))).toBeLessThan(none);
+  });
+  it('focused builds stay balanced against each other (about 40-60%)', () => {
+    const B = ['strong', 'playful', 'tough', 'calm', 'even'];
+    for (const T of [70, 150]) {
+      for (const x of B) {
+        for (const y of B) {
+          if (x >= y) continue;
+          // both directions, so the foe's own commands don't skew it
+          const r = (winRate(build(x, T), build(y, T), 300) + 1 - winRate(build(y, T), build(x, T), 300)) / 2;
+          expect(r, `${x} vs ${y} at ${T}`).toBeGreaterThan(0.35);
+          expect(r, `${x} vs ${y} at ${T}`).toBeLessThan(0.65);
+        }
+      }
+    }
+  });
+});
+
+describe('bond', () => {
+  it('grows with care and visits, within a daily cap', () => {
+    const p = hatched(1);
+    const start = p.bond;
+    act(p, 'feed', null, T0 + HOUR);
+    expect(p.bond).toBe(start + BOND.CARE);
+    for (let i = 0; i < 40; i++) act(p, 'pat', null, T0 + 2 * HOUR);
+    expect(p.bond - start).toBeLessThanOrEqual(BOND.DAILY_CAP);
+    expect(p.daily.pats).toBe(BOND.PATS_PER_DAY);
+    recordVisit(p, T0 + DAY);
+    expect(p.daily.bond).toBe(BOND.VISIT); // a new day, a fresh cap
+  });
+  it('fades when the pet is neglected', () => {
+    const p = hatched(1);
+    p.bond = 60;
+    p.lastUpdated = T0;
+    catchUp(p, T0 + 4 * DAY);
+    expect(p.bond).toBeLessThan(60);
+  });
+  it('drives the obey chance, and stubborn unhappy pets listen less', () => {
+    const p = hatched(1);
+    p.dna.temperament = 'cheerful';
+    p.bond = 0;
+    const low = obeyChance(p);
+    p.bond = 100;
+    expect(obeyChance(p)).toBeGreaterThan(low + 0.5);
+    p.dna.temperament = 'stubborn';
+    p.care.happiness = 20;
+    expect(obeyChance(p)).toBeLessThan(0.7);
+    expect(gainBond(p, 50, T0)).toBe(0); // already at 100
   });
 });
 
@@ -171,7 +243,7 @@ describe('server API', () => {
       do res = await s.battleStep(st.battle.id, null);
       while (!res.rewards);
     }
-    expect((await s.startBattle(0)).error).toMatch(/No battles left/);
+    expect((await s.startBattle(0)).error).toMatch(/No matches left/);
   });
   it('never gives two pets the same seed', async () => {
     const st = memStorage();
@@ -203,6 +275,8 @@ describe('server API', () => {
     expect(v.nickname).toBe('Bobo');
     expect(v.dna).toMatchObject({ code: codeFromNumber(900917), talent: 'calm', quirk: 'sleepyhead' });
     expect(v.genome.species).toBe('mochi'); // old 2D Mochi pets become 3D Mochi
+    expect(v.bond).toBeGreaterThanOrEqual(BOND.START); // v3: pets get a bond
+    expect(v.bondLabel).toBeTruthy();
   });
   it('the client cannot mutate server state through returned views', async () => {
     const s = createServer({ storage: memStorage(), clock: () => T0 });

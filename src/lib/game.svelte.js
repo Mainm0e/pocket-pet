@@ -1,5 +1,6 @@
 import { api } from './api.js';
 import { MARKS } from '../server/constants.js';
+import { sfx } from './sound.js';
 
 let seq = 0;
 
@@ -37,18 +38,22 @@ class Game {
         break;
       case 'mark':
         this.showToast(`New memory mark: ${MARKS[e.mark].label}!`);
+        sfx('chime');
         break;
       case 'woke':
         this.say('Good morning!');
+        sfx('wake');
         break;
       case 'crack':
         this.play('wobble');
+        sfx('crack');
         break;
       case 'rareSpecies':
         this.showToast(`Something glows... a 1 in ${Math.round(1 / e.odds).toLocaleString('en')} egg!`);
         break;
       case 'hatched':
         this.play('hatch');
+        sfx('hatch');
         if (this.pet?.genome.speciesOdds < 0.001)
           setTimeout(() => this.showToast(`A ${this.pet.genome.speciesLabel}! Only 1 in ${Math.round(1 / this.pet.genome.speciesOdds).toLocaleString('en')} eggs.`), 400);
         setTimeout(() => (this.naming = true), 900);
@@ -82,6 +87,7 @@ class Game {
     if (r) {
       if (r.say) this.say(r.say);
       if (r.fx) this.play(r.fx, r.fx === 'eat' ? 1500 : 1100);
+      if (r.ok && (r.fx === 'sleep' || r.fx === 'wake')) sfx(r.fx); // the rest are timed by the 3D stage
     }
     return r;
   }

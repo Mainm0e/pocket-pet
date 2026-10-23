@@ -9,7 +9,7 @@ import { ROOM_BOUNDS, DEFAULT_ROOM } from '../server/room.js';
 const BOUNDS = { x: 1.15, zMin: -1.45, zMax: 0.9 };
 const clamp = THREE.MathUtils.clamp;
 
-export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAnchor, onSelect, onItemMoved } = {}) {
+export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAnchor, onSelect, onItemMoved, onSound } = {}) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -142,10 +142,18 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
   }
   resetMotion(false);
 
-  const hop = (p = 2) => {
+  // Movement sounds only for things the player caused: the pet's own idle wandering stays quiet.
+  const MOVE_SOUNDS = new Set(['jump', 'pat', 'step']);
+  const sound = (name, delay) => {
+    if (MOVE_SOUNDS.has(name) && now() < (M.idleUntil ?? 0)) return;
+    onSound?.(name, delay);
+  };
+  // `sfx` plays on push-off (null: silent, e.g. the small hops of a mochi's walk)
+  const hop = (p = 2, sfx = 'jump') => {
     if (M.y <= 0.001) {
       M.vy = p;
       M.sv += 1.4;
+      if (sfx) sound(sfx);
     }
   };
   const kick = (a) => (M.sv += a * 8);
@@ -154,6 +162,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
     M.spinDur = d;
   };
   const busy = (sec) => {
+    M.idleUntil = 0;
     M.busyUntil = now() + sec;
     M.behUntil = M.busyUntil;
   };
@@ -439,6 +448,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
   }
   function startBehavior(b) {
     let dur = 1.6 + Math.random() * 2.2;
+    M.idleUntil = Infinity; // set to the real end below
     if (b !== 'walk' && b !== 'hide' && b !== 'look' && b !== 'sniff') faceYou();
     switch (b) {
       case 'walk': {
@@ -518,6 +528,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         break;
     }
     M.behUntil = now() + dur;
+    M.idleUntil = M.behUntil + 1; // a little extra: the last hop of a walk can land late
   }
 
   // ---------- care scenes ----------
@@ -539,6 +550,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       done();
     } else walkTo(BED.x, BED.z, 0.45, done);
     busy(1e6);
+    M.idleUntil = Infinity; // a sleepy shuffle to bed, no footstep sounds (it often goes by itself)
   }
   function wakeUp() {
     M.sleeping = false;
@@ -559,6 +571,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
 
   function play(fx) {
     if (!model) return;
+    M.idleUntil = 0;
     switch (fx) {
       case 'wobble':
         M.shake = 1;
@@ -575,7 +588,11 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         M.tWag = 1;
         after(1.2, () => (M.tWag = 0.3));
         emit('heart', headPos(), { n: 2, v: [0, 1, 0] });
-        if (!M.sleeping) hop(1.4);
+        sound('squish');
+        if (!M.sleeping) {
+          hop(1.4);
+          sound('giggle', 0.15);
+        }
         break;
       case 'eat': {
         busy(5);
@@ -605,15 +622,18 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
               k.material.dispose();
             }
             emit('puff', BOWL.clone().setY(0.2), { n: 1, size: 0.12, life: 0.4, v: [0, 0.4, 0] });
+            sound('chomp');
             if (++bites < 3) after(0.55, bite);
             else
               after(0.5, () => {
                 kibble.clear();
                 M.tHeadPitch = 0;
+                sound('gulp');
                 faceYou();
                 hop(1.8);
                 M.tWag = 1;
                 emit('heart', headPos(), { n: 3, v: [0, 1, 0] });
+                sound('giggle', 0.25);
                 after(1.2, () => (M.tWag = 0.3));
               });
           };
@@ -635,6 +655,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         ballState.active = true;
         const tx = (Math.random() * 2 - 1) * BOUNDS.x * 0.8;
         ballState.vel.set((tx - bi.group.position.x) * 0.9, 3, 1.4);
+        sound('boing');
         M.chase = true;
         M.tWag = 1;
         after(3.2, () => {
@@ -643,6 +664,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
           faceYou();
           spin(0.8);
           hop(2.4);
+          sound('giggle');
           emit('note', headPos(), { n: 3, v: [0, 1, 0] });
           emit('star', headPos(), { n: 2, v: [0, 1.2, 0] });
           after(1, () => (M.tWag = 0.3));
@@ -655,10 +677,11 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         let n = 0;
         const rep = () => {
           kick(-0.6);
+          sound('hup');
           after(0.15, () => hop(2.6));
           emit('drop', headPos(0.1), { v: [0.6, 0.6, 0], g: -2, size: 0.1, life: 0.8 });
           if (++n < 3) after(0.75, rep);
-          else after(0.7, () => emit('star', headPos(), { n: 3, v: [0, 1.2, 0] }));
+          else after(0.7, () => (emit('star', headPos(), { n: 3, v: [0, 1.2, 0] }), sound('sparkle')));
         };
         rep();
         break;
@@ -666,24 +689,31 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       case 'bath': {
         busy(3.6);
         faceYou();
-        for (let i = 0; i < 6; i++) after(i * 0.2, () => emit('bubble', new THREE.Vector3(M.x, 0.4, M.z), { n: 2, spread: 0.8, size: 0.18, v: [0, 0.7, 0], g: 0.1, life: 1.6 }));
+        for (let i = 0; i < 6; i++)
+          after(i * 0.2, () => {
+            sound('bubble');
+            emit('bubble', new THREE.Vector3(M.x, 0.4, M.z), { n: 2, spread: 0.8, size: 0.18, v: [0, 0.7, 0], g: 0.1, life: 1.6 });
+          });
         after(1.6, () => {
           M.shake = 1.4; // the dog shake!
+          sound('splash');
           for (let i = 0; i < 8; i++) {
             const a = (i / 8) * Math.PI * 2;
             emit('drop', new THREE.Vector3(M.x, 0.6, M.z), { v: [Math.cos(a) * 1.2, 1, Math.sin(a) * 0.6], g: -3, size: 0.09, life: 0.8, spread: 0.1, wob: false });
           }
         });
-        after(2.8, () => emit('sparkle', headPos(), { n: 4, spread: 0.8 }));
+        after(2.8, () => (emit('sparkle', headPos(), { n: 4, spread: 0.8 }), sound('sparkle')));
         break;
       }
       case 'refuse':
         M.headShake = 1;
+        sound('refuse');
         emit('drop', headPos(0.05), { v: [0.3, 0.3, 0], g: -1.5, size: 0.1 });
         break;
       // sleep / wake follow the server state through setRoom()
       case 'clean':
         M.tWag = 0.8;
+        sound('sparkle');
         after(1, () => (M.tWag = 0.3));
         break;
       default:
@@ -694,11 +724,13 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
   // ---------- interactions with furniture ----------
   function interact(it, point) {
     if (!model || model.stage === 'egg' || M.sleeping || editing) return;
+    M.idleUntil = 0;
     const kind = it ? it.data.kind : point ? 'floor' : 'window';
     const free = now() >= M.busyUntil;
     switch (kind) {
       case 'plant': {
         it.group.userData.rustle = 1;
+        sound('rustle');
         for (let i = 0; i < 4; i++) emit('leaf', it.group.position.clone().setY(0.6), { v: [(Math.random() - 0.5) * 0.6, 0.3, 0.2], g: -0.6, size: 0.12, life: 1.6 });
         if (free) {
           busy(3);
@@ -715,6 +747,8 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       }
       case 'toybox': {
         it.group.userData.open = 1.6;
+        sound('pop');
+        sound('sparkle', 0.1);
         emit('star', it.group.position.clone().setY(0.5), { n: 4, spread: 0.4, v: [0, 1.4, 0] });
         emit('note', it.group.position.clone().setY(0.5), { n: 2, v: [0, 1, 0] });
         if (free) {
@@ -737,6 +771,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         walkTo(it.group.position.x, it.group.position.z, 0.6, () => {
           M.seatY = it.group.userData.parts.seatY ?? 0.15;
           faceYou();
+          sound('squish');
           kick(-0.4);
           emit('heart', headPos(), { n: 2, v: [0, 1, 0] });
           after(3.5, () => {
@@ -770,6 +805,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
         walkTo(point.x, point.z, 0.65, faceYou);
         break;
       case 'lamp':
+        sound('click');
         emit('sparkle', it.group.position.clone().setY(1.2), { n: 3, spread: 0.3, size: 0.12 });
         break;
       default:
@@ -1054,6 +1090,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
   }
 
   let zTimer = 0;
+  let zCount = 0;
   function animatePet(t, dt) {
     const P = model.parts;
     const b = model.body;
@@ -1064,7 +1101,10 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       M.y += M.vy * dt;
       if (M.y <= 0) {
         M.y = 0;
-        if (M.vy < -1) kick(-Math.min(0.5, -M.vy * 0.12));
+        if (M.vy < -1) {
+          kick(-Math.min(0.5, -M.vy * 0.12));
+          sound('pat');
+        }
         M.vy = 0;
       }
     }
@@ -1085,7 +1125,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       });
       if (!reduced && t > M.behUntil) {
         M.behUntil = t + 3 + Math.random() * 3;
-        hop(0.9);
+        hop(0.9, null);
         M.shake = 0.4;
       }
       return;
@@ -1115,7 +1155,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
           if (hopper && M.y <= 0.001 && !reduced) {
             // a mochi gets around by hopping: push off, travel while airborne, squish on landing
             if (t > (M.nextHop ?? 0)) {
-              hop((1.35 + M.speed * 0.6) * (P.bounce ?? 1));
+              hop((1.35 + M.speed * 0.6) * (P.bounce ?? 1), null);
               M.nextHop = t + 0.06 + 0.1 * (P.squish ?? 1);
             }
           } else {
@@ -1147,7 +1187,12 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       }
     }
     M.yaw = angleLerp(M.yaw, M.tYaw, Math.min(1, dt * 6));
-    if (moving) M.phase += dt * (6 + M.speed * 12);
+    if (moving) {
+      M.phase += dt * (6 + M.speed * 12);
+      const step = Math.floor(M.phase / Math.PI); // a footstep every half stride
+      if (!hopper && step !== M.step) sound('step'); // hoppers get a pat on each landing instead
+      M.step = step;
+    }
     let spinA = 0;
     if (M.spinStart != null) {
       const k = (t - M.spinStart) / M.spinDur;
@@ -1220,6 +1265,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       zTimer -= dt;
       if (zTimer <= 0) {
         zTimer = 1.6;
+        if (zCount++ % 3 === 0) sound('snore');
         emit('z', headPos(0.05), { v: [0.15, 0.35, 0], g: 0, size: 0.16, life: 2.2 });
       }
     }

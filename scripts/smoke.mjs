@@ -101,6 +101,8 @@ try {
     await wait(2500);
   }
   await shot('04-care');
+  const heard = await page.evaluate(() => window.__sfx.slice());
+  check(['hatch', 'chomp', 'gulp', 'jump', 'pat'].every((n) => heard.includes(n)), `care sounds play (${[...new Set(heard)].join(' ')})`);
   await btn('More').click();
   await wait(400);
   await btn('Pet card').click();
@@ -111,6 +113,8 @@ try {
   await btn('Sleep').click();
   await wait(3500);
   check((await page.locator('.actions button.active').count()) === 1, 'pet goes to sleep');
+  const snored = await page.waitForFunction(() => window.__sfx.includes('snore'), null, { timeout: 15000 }).then(() => true, () => false);
+  check(snored, 'sleeping pet snores');
   await shot('06-sleep');
   await btn('Wake').click();
   await wait(1500);
@@ -179,19 +183,34 @@ try {
   await wait(2000);
   await shot('09-plant');
 
-  // ---- battle ----
+  // ---- volleyball ----
   await wait(2000);
-  await more('Battle');
+  await more('Volleyball');
   await wait(3000);
+  check((await page.locator('.bond').textContent()).includes('listens'), 'match screen shows how well the pet listens');
   await shot('10-battle-pick');
   await page.locator('.fight').first().click();
-  await wait(2000);
+  await page.waitForFunction(() => !!window.__court, null, { timeout: 120000 });
   await page.locator('.moves button', { hasText: 'Cheer' }).click();
-  await page.waitForSelector('.result', { timeout: 90000 });
-  check(true, 'battle finished');
+  await wait(5000);
+  await shot('11a-match');
+  const midScore = await page.locator('.nums').textContent();
+  await page.waitForSelector('.result', { timeout: 240000 });
+  check(true, `volleyball match finished (${(await page.locator('.final').textContent()).trim()}, mid-match ${midScore.replace(/\s+/g, ' ').trim()})`);
+  const dbg = await page.evaluate(() => window.__court.debug());
+  const close = Object.entries(dbg.byPhase).filter(([, q]) => q < 0.9).map(([k, q]) => `${k} ${q}`);
+  check(dbg.closest >= 0.9, `the ball never goes through a pet (closest ${dbg.closest}, 1 = touching${close.length ? '; ' + close.join(', ') : ''})`);
+  const finalScore = (await page.locator('.final').textContent()).split('–').map(Number);
+  check(Math.max(...finalScore) === 5, 'match is first to 5');
+  const matchSounds = await page.evaluate(() => window.__sfx.slice(-300));
+  check(['serve', 'whistle'].every((n) => matchSounds.includes(n)) && matchSounds.some((n) => ['bump', 'spike'].includes(n)), 'match sounds play');
   await shot('11-battle-result');
   await btn('Back home').click();
   await wait(1500);
+  const before = await page.evaluate(() => window.__sfx.length);
+  await wait(10000); // leave the pet alone: its idle wandering must stay quiet
+  const idle = await page.evaluate((n) => window.__sfx.slice(n).filter((s) => ['jump', 'pat', 'step'].includes(s)), before);
+  check(idle.length === 0, `idle pet makes no movement sounds${idle.length ? ` (heard ${idle.join(' ')})` : ''}`);
 
   // ---- decorate ----
   await btn('More').click();
@@ -220,6 +239,21 @@ try {
   const room = await page.evaluate(() => JSON.parse(localStorage['pocketpet.db.v1']).room);
   check(room?.wall === 'mint' && room.floor === 'checker' && room.items.some((i) => i.kind === 'toybox'), 'decorated room is saved and survives a reload');
   await shot('13-room-after-reload');
+
+  // ---- sound toggle ----
+  await btn('More').click();
+  await wait(400);
+  await btn('Turn sound off').click();
+  await wait(300);
+  await shot('13b-sound-off');
+  check(await btn('Turn sound on').isVisible(), 'sound can be muted');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!window.__stage, null, { timeout: 120000 });
+  await btn('More').click();
+  await wait(400);
+  check(await btn('Turn sound on').isVisible(), 'mute is remembered after a reload');
+  await btn('Turn sound on').click();
+  await btn('Close').click();
 
   // ---- seed lab ----
   await page.goto(`${URL}/?lab&seed=MO1-3E&stage=adult&top=playful&second=calm&yaw=0.4`, { waitUntil: 'domcontentloaded' });

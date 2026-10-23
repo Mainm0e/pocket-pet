@@ -1,5 +1,5 @@
 // Minimal offline cache: network-first for pages, cache-first for hashed assets.
-const CACHE = 'pocket-pet-v1';
+const CACHE = 'pocket-pet-v3';
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icon.svg'])));
   self.skipWaiting();
