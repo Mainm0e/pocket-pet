@@ -475,7 +475,10 @@ export async function createCourt(canvas, { onSound } = {}) {
     raf = requestAnimationFrame(frame);
     if (paused || document.hidden) return;
     resize();
-    const dt = Math.min(0.05, clock.getDelta());
+    // Pets move by the real clock like the ball does, in small steps so the springs stay stable:
+    // on a slow device they must still reach the ball in time.
+    const dt = Math.min(0.25, clock.getDelta());
+    const subs = Math.ceil(dt / 0.03);
     const t = now();
     for (let i = timers.length - 1; i >= 0; i--) {
       if (timers[i].at <= t) {
@@ -496,7 +499,7 @@ export async function createCourt(canvas, { onSound } = {}) {
       }
     }
     for (const p of Object.values(pets)) {
-      animatePet(p, t, dt);
+      for (let i = 0; i < subs; i++) animatePet(p, t, dt / subs);
       // a ball lying on the sand gets nudged along by a pet that walks into it
       if (p.model && !flight && ball.position.y < BALL_R + 0.05) {
         const dx = ball.position.x - p.x;
