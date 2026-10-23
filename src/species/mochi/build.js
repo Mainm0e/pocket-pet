@@ -91,7 +91,7 @@ async function buildMochi(look, detail) {
     shape: baby ? 'round' : G.shape, // every baby starts as a plain round mochi
     w: r2(w), h: r2(baby ? 0.95 : h), form, feature, top: has('top') ? G.top : 'none',
     uniqueTail: uq.slot === 'tail' && (uq.value === 'tail_puff' || uq.value === 'tail_curl') ? uq.value : null,
-    earTilt: r2(F.earTilt), earSize: r2(F.earSize), gap: r2(F.gap), cheek: r2(F.cheek), cheeks: G.cheeks,
+    earTilt: r2(F.earTilt), earSize: r2(F.earSize), gap: r2(F.gap), cheek: r2(F.cheek * (form === 'tough' ? 1.35 : 1)), cheeks: G.cheeks,
     pattern: has('pattern') ? G.pattern : 'plain', flavor: G.flavor, spotSeed: F.spotSeed, markSide: F.markSide, markY: F.markY,
     detail, ...colours,
   });
@@ -145,18 +145,43 @@ async function buildMochi(look, detail) {
       const hi = blob(glossMat('#ffffff', { emissive: new THREE.Color(0x555555) }), [0.018 * eyeS, 0.02 * eyeS, 0.01]);
       hi.position.set(0.015 * eyeS, 0.021 * eyeS, 0.03 * eyeS);
       lid.add(hi);
-      if (G.eyes === 'sparkle') {
+      if (G.eyes === 'sparkle' || form === 'playful') {
         const hi2 = blob(glossMat('#ffffff'), [0.009 * eyeS, 0.009 * eyeS, 0.006]);
         hi2.position.set(-0.017 * eyeS, -0.019 * eyeS, 0.032 * eyeS);
         lid.add(hi2);
       }
       if (G.eyes === 'sleepy') lid.userData.rest = 0.55;
+      else if (form === 'calm') lid.userData.rest = 0.62; // calm pets look serene, eyes half closed
     }
     if (look.mood === 'sad') {
       const b = tube(inkMat, [[-0.034, 0, 0], [0.034, -s * 0.018, 0]], 0.007);
       b.position.set(0, 0.085 * eyeS, 0.02);
       b.rotation.z = s * 0.35;
       eg.add(b);
+    } else if (form) {
+      // How it was raised shows in its face (its top trait). `-s` points toward the middle of the face.
+      const by = 0.1 * eyeS;
+      if (form === 'strong') {
+        // determined: inner ends pulled down
+        const b = tube(inkMat, [[s * 0.048, 0.018, 0], [-s * 0.04, -0.018, 0]], 0.015);
+        b.position.set(0, by, 0.02);
+        eg.add(b);
+      } else if (form === 'playful') {
+        // happy: raised little arches
+        const b = torus(inkMat, 0.038, 0.011, Math.PI, 16);
+        b.position.set(0, by + 0.008, 0.018);
+        eg.add(b);
+      } else if (form === 'tough') {
+        // easygoing: flat and relaxed
+        const b = tube(inkMat, [[-0.042, 0, 0], [0.042, 0, 0]], 0.013);
+        b.position.set(0, by - 0.006, 0.02);
+        eg.add(b);
+      } else if (form === 'calm') {
+        // serene: soft, outer ends a little lower
+        const b = tube(inkMat, [[s * 0.046, -0.012, 0], [-s * 0.038, 0.008, 0]], 0.01);
+        b.position.set(0, by, 0.02);
+        eg.add(b);
+      }
     }
     parts.eyes.push(eg);
     parts.blink.push(lid);
@@ -186,6 +211,16 @@ async function buildMochi(look, detail) {
     }
   }
 
+  // a Strong adult grins with one tiny confident fang
+  if (feature === 'strong' && G.mouth !== 'open') {
+    const fang = blob(glossMat('#FFFFFF', { roughness: 0.25 }), [0.012, 0.019, 0.009]);
+    fang.position.set(0.018, -0.02, 0.01);
+    const edge = blob(inkMat, [0.0145, 0.0215, 0.006]); // a thin dark rim so it reads on pale mochi
+    edge.position.set(0.018, -0.02, 0.005);
+    mouth.add(edge);
+    mouth.add(fang);
+  }
+
   const crown = sp.crown ? V(sp.crown.p) : new THREE.Vector3(0, sp.top, 0);
   // ---- top extras that aren't part of the sculpt ----
   if (has('top') && G.top === 'antenna' && uq.slot !== 'head') {
@@ -197,7 +232,7 @@ async function buildMochi(look, detail) {
     ant.add(ball);
     body.add(ant);
   }
-  if (((has('top') && G.top === 'sprout') || form === 'calm') && uq.slot !== 'head') {
+  if (has('top') && G.top === 'sprout' && uq.slot !== 'head') {
     const sprout = new THREE.Group();
     sprout.position.copy(crown).add(new THREE.Vector3(0, -0.01, 0));
     sprout.add(tube(softMat('#4F9A3A'), [[0, 0, 0], [0.01, 0.07, 0], [0.03, 0.13, 0]], 0.014));
@@ -210,7 +245,7 @@ async function buildMochi(look, detail) {
     body.add(sprout);
   }
   // topper (a little treat on top, like an ichigo daifuku)
-  if (has('topper') && G.topper !== 'none' && sp.topper && form !== 'strong') {
+  if (has('topper') && G.topper !== 'none' && sp.topper) {
     const tp = new THREE.Group();
     tp.position.copy(V(sp.topper.p));
     if (G.topper === 'strawberry') {
@@ -312,7 +347,7 @@ async function buildMochi(look, detail) {
   if (feature === 'calm') {
     const halo = torus(glossMat('#FFD34D', { emissive: new THREE.Color('#FFB000'), emissiveIntensity: 0.6 }), 0.17, 0.022);
     halo.rotation.x = Math.PI / 2;
-    halo.position.set(0, crown.y + (form === 'playful' ? 0.34 : 0.22), 0);
+    halo.position.set(0, crown.y + 0.22, 0);
     body.add(halo);
     parts.halo = halo;
   }

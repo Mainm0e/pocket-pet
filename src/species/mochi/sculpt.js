@@ -1,4 +1,4 @@
-// The Mochi, sculpted: one soft daifuku blob with everything (ears, spikes, feet, tail)
+// The Mochi, sculpted: one soft daifuku blob with everything (ears, feet, tail)
 // melted into it, flat-bottomed like a real mochi, with the pattern painted on.
 // Pure JS: runs in the sculpt worker.
 import { ellipsoid, sphere, capsule, squash, roundBox, unionParts, smax, meshField, hitSurface, lin, mix3, sstep, hash3 } from '../../three/sdf.js';
@@ -47,38 +47,12 @@ export function sculptMochi(P) {
       ears.push(e);
       add(e, 0.06);
     }
-  // ---- Playful Teen: a bouncy curl springing from the crown (like a cowlick) ----
-  if (form === 'playful') {
-    const k = earSize; // the fingerprint makes every curl a little different
-    const tilt = earTilt * 0.5;
-    const pts = [
-      [0, T - 0.05, 0.02],
-      [0.01 + tilt * 0.2, T + 0.09 * k, 0],
-      [0.035 + tilt * 0.4, T + 0.18 * k, 0.02],
-      [0.085 + tilt * 0.5, T + 0.21 * k, 0.06],
-      [0.12 + tilt * 0.5, T + 0.16 * k, 0.09],
-      [0.1 + tilt * 0.4, T + 0.1 * k, 0.1],
-      [0.065 + tilt * 0.3, T + 0.115 * k, 0.085],
-    ];
-    const sc = 1.2; // a touch bigger and plumper than a hair, so it reads as a curl
-    const P0 = pts.map(([x, y, z]) => [x * sc, T + (y - T) * sc, z * sc]);
-    for (let i = 0; i < P0.length - 1; i++) {
-      const r0 = 0.07 - i * 0.0065;
-      add(capsule(P0[i], P0[i + 1], r0, r0 - 0.0065), i === 0 ? 0.07 : 0.014);
-    }
-  }
-  if (topGene === 'horns' || feature === 'strong')
+  // (raising never grows anything on the head: it shows in the face instead, see build.js)
+  if (topGene === 'horns')
     for (const s of s2) {
       const hn = capsule([s * 0.15 * w, T - 0.04, 0.08], [s * 0.19 * w, T + 0.11, 0.1], 0.055, 0.016);
       horns.push(hn);
       add(hn, 0.035);
-    }
-  // ---- Teen body forms ----
-  if (form === 'strong')
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2 + 0.6;
-      const r0 = 0.2 * w;
-      add(capsule([Math.sin(a) * r0, T - 0.1, Math.cos(a) * r0], [Math.sin(a) * r0 * 1.5, T + 0.13, Math.cos(a) * r0 * 1.5], 0.09, 0.02), 0.07);
     }
   // ---- Adult features ----
   if (feature === 'tough') for (const s of s2) add(ellipsoid([s * 0.21 * w, 0.06, 0.33 * w], [0.13, 0.075, 0.12]), 0.05);
@@ -178,6 +152,6 @@ export function sculptMochi(P) {
       }
     return c;
   };
-  const mesh = meshField(f, [-0.8 * w - 0.1, -0.02, -0.75 * w - 0.25], [0.8 * w + 0.1, T + (form === 'playful' ? 0.36 : earTop === 'cat' ? 0.28 : 0.2), 0.75 * w + 0.15], 0.015 * (P.detail ?? 1), paint);
+  const mesh = meshField(f, [-0.8 * w - 0.1, -0.02, -0.75 * w - 0.25], [0.8 * w + 0.1, T + (earTop === 'cat' ? 0.28 : 0.2), 0.75 * w + 0.15], 0.015 * (P.detail ?? 1), paint);
   return { mesh, spots };
 }

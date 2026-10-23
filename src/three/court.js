@@ -136,10 +136,16 @@ export async function createCourt(canvas, { onSound } = {}) {
   const ball = new THREE.Mesh(new THREE.SphereGeometry(BALL_R, 32, 20), new THREE.MeshStandardMaterial({ map: ballTexture(), roughness: 0.5 }));
   ball.castShadow = true;
   scene.add(ball);
-  let flight = null; // { a, b, h, t0, dur, then }
-  function fly(to, dur, h, then) {
-    flight = { a: ball.position.clone(), b: to.clone(), h, t0: now(), dur: Math.max(0.05, dur), then };
+  let flight = null; // { a, b, h, t0, dur, then, track }
+  /**
+   * Fly the ball to `to`. With `track` (a pet), the end point slides onto that pet's real head
+   * as the ball arrives, so it always lands ON the head even if a jump or a run is a frame late.
+   */
+  function fly(to, dur, h, then, track = null) {
+    flight = { a: ball.position.clone(), b: to.clone(), h, t0: now(), dur: Math.max(0.05, dur), then, track };
   }
+  const SERVE_REST = new THREE.Vector3(0, 0.04, 0); // a hair above the surface, so breathing never sinks it in
+  const endAt = new THREE.Vector3();
 
   // ---------- timing ----------
   const clock = new THREE.Clock();
@@ -214,7 +220,7 @@ export async function createCourt(canvas, { onSound } = {}) {
   /** The ball waits in front of the server, who walks back to the baseline. */
   function servePoint(s) {
     const p = pets[s];
-    return contactAt(p, p.tx, p.tz).add(new THREE.Vector3(DIR[s] * 0.04, 0.04, 0));
+    return contactAt(p, p.tx, p.tz).add(SERVE_REST);
   }
   function resetRally(server) {
     phaseTag = 'reset';
@@ -222,7 +228,7 @@ export async function createCourt(canvas, { onSound } = {}) {
     const sx = backX(server);
     const sz = 0.25 * DIR[server];
     // lob the ball over everyone's heads first, then walk back to places
-    fly(contactAt(s, sx, sz).add(new THREE.Vector3(DIR[server] * 0.04, 0.04, 0)), 1.0, 1.2);
+    fly(contactAt(s, sx, sz).add(SERVE_REST), 1.0, 1.2, null, s);
     after(0.5, () => {
       for (const p of Object.values(pets)) {
         if (p === s) moveTo(p, sx, sz, 1.8);
@@ -282,7 +288,7 @@ export async function createCourt(canvas, { onSound } = {}) {
           if (e.shot === 'serve') {
             windup = 0.5;
             lift = JUMP_LIFT;
-            at(t, () => fly(contactAt(p, p.tx, p.tz, lift), 0.5, 0.5)); // toss
+            at(t, () => fly(contactAt(p, p.tx, p.tz, lift), 0.5, 0.5, null, p)); // toss
             at(t + 0.22, () => hop(p, 2.9));
           } else if (e.shot === 'spike') {
             // run up toward the net while the ball is set high, then jump and smash
@@ -291,7 +297,7 @@ export async function createCourt(canvas, { onSound } = {}) {
             const ax = -dir * 0.75;
             at(t, () => {
               const az = p.z * 0.6;
-              fly(contactAt(p, ax, az, lift), 0.62, 0.85); // pop it up high first...
+              fly(contactAt(p, ax, az, lift), 0.62, 0.85, null, p); // pop it up high first...
               sound('bump');
               after(0.12, () => moveTo(p, ax, az, 3.6)); // ...then run in under it
             });
@@ -324,7 +330,7 @@ export async function createCourt(canvas, { onSound } = {}) {
               if (!willMiss) {
                 // runs to it and meets it with its head
                 moveTo(r, spot.x, spot.z, Math.max(1.8, Math.hypot(spot.x - r.x, spot.z - r.z) / (dur * 0.75)));
-                fly(contactAt(r, r.tx, r.tz), dur, e.shot === 'spike' ? 0.15 : e.shot === 'serve' ? 1.0 : 1.45);
+                fly(contactAt(r, r.tx, r.tz), dur, e.shot === 'spike' ? 0.15 : e.shot === 'serve' ? 1.0 : 1.45, null, r);
               } else {
                 // a drop shot: short (in front of it) and off to the side, so its path never crosses the pet
                 const away = r.z > 0 ? -1 : 1;
@@ -395,7 +401,8 @@ export async function createCourt(canvas, { onSound } = {}) {
   let raf;
   let paused = false;
   let moodTimer = 0;
-  let closest = Infinity;
+  let closest = Infinity; // what you see (after the safety net): never below 1
+  let planned = Infinity; // before it: how well the choreography itself avoided the pets
   let phaseTag = 'start';
   const byPhase = {};
   function resize() {
@@ -489,7 +496,10 @@ export async function createCourt(canvas, { onSound } = {}) {
     }
     if (flight) {
       const k = clamp((t - flight.t0) / flight.dur, 0, 1);
-      ball.position.lerpVectors(flight.a, flight.b, k);
+      endAt.copy(flight.b);
+      const tr = flight.track;
+      if (tr?.model) endAt.lerp(contactAt(tr, tr.x, tr.z, tr.y).add(SERVE_REST), THREE.MathUtils.smoothstep(k, 0.55, 1));
+      ball.position.lerpVectors(flight.a, endAt, k);
       ball.position.y += 4 * flight.h * k * (1 - k);
       if (!reduced) ball.rotation.z -= dt * 9;
       if (k >= 1) {
@@ -512,13 +522,22 @@ export async function createCourt(canvas, { onSound } = {}) {
           ball.rotation.z -= (min - d) * 3;
         }
       }
-      // how close the ball gets to the body (1 = just touching, < 1 = inside it)
-      if (p.model) {
-        const b = ball.position;
-        const q = Math.sqrt(((b.x - p.x) / (p.r + BALL_R)) ** 2 + ((b.y - p.y - p.h / 2) / (p.h / 2 + BALL_R)) ** 2 + ((b.z - p.z) / (p.r + BALL_R)) ** 2);
-        if (q < closest) closest = q;
-        if (q < (byPhase[phaseTag + ':' + p.side] ?? Infinity)) byPhase[phaseTag + ':' + p.side] = +q.toFixed(3);
-      }
+      if (!p.model) continue;
+      // Pets are solid. q = how close the ball is to the body (1 = just touching, < 1 = inside).
+      const b = ball.position;
+      const rx = p.r + BALL_R;
+      const ry = p.h / 2 + BALL_R;
+      const cy = p.y + p.h / 2;
+      const ox = (b.x - p.x) / rx;
+      const oy = (b.y - cy) / ry;
+      const oz = (b.z - p.z) / rx;
+      const q = Math.sqrt(ox * ox + oy * oy + oz * oz);
+      // how well the moves were timed (before the safety net below)
+      if (q < planned) planned = q;
+      if (q < (byPhase[phaseTag + ':' + p.side] ?? Infinity)) byPhase[phaseTag + ':' + p.side] = +q.toFixed(3);
+      // safety net: on a slow device a jump or a run can come a frame late; never let the ball sink in
+      if (q < 1 && q > 1e-4) b.set(p.x + (ox / q) * rx, cy + (oy / q) * ry, p.z + (oz / q) * rx);
+      if (Math.max(q, 1) < closest) closest = Math.max(q, 1);
     }
     // mood you can see: sweat when nervous, stars when excited
     moodTimer -= dt;
@@ -590,8 +609,11 @@ export async function createCourt(canvas, { onSound } = {}) {
       v3.copy(headPos(p, 0.25)).project(camera);
       return { x: ((v3.x + 1) / 2) * canvas.clientWidth, y: ((1 - v3.y) / 2) * canvas.clientHeight };
     },
-    /** For tests: the closest the ball came to a pet's body (1 = touching, below 1 = inside). */
-    debug: () => ({ closest: +closest.toFixed(3), byPhase, size: { you: [pets.you.r, pets.you.h], foe: [pets.foe.r, pets.foe.h] } }),
+    /**
+     * For tests: the closest the ball came to a pet's body (1 = touching, below 1 = inside).
+     * `closest` is what was shown; `planned` is before the safety net pushed the ball out.
+     */
+    debug: () => ({ closest: +closest.toFixed(3), planned: +planned.toFixed(3), byPhase, size: { you: [pets.you.r, pets.you.h], foe: [pets.foe.r, pets.foe.h] } }),
     setPaused(p) {
       paused = p;
       if (!p) clock.getDelta();

@@ -107,7 +107,7 @@ describe('growth', () => {
     checkEvolution(p, T0 + 3 * DAY);
     expect(p.stage).toBe('adult');
     expect(p.form.second).toBe('playful');
-    expect(title(p)).toMatch(/Bouncy Spikeling$/);
+    expect(title(p)).toMatch(/Bouncy Champling$/);
     expect(dnaString(p)).toBe(`adult-strong-playful-${codeFromNumber(42)}`);
   });
 });

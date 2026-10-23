@@ -1,5 +1,6 @@
-// Mochi, genome generation 2 (Season 1, from Oct 2026): same genes as gen 1, but ears
-// (Bun ears, Cat ears) are very rare, 1% each. Gen 1 pets keep their DNA. FROZEN once released:
+// Mochi, genome generation 2 (Season 1, from Oct 2026): same genes as gen 1, but a clean
+// head is the norm: ears, antenna, sprout and horns are 1% each, and rare head parts are
+// 5x rarer. Gen 1 pets keep their DNA. FROZEN once released:
 // - never reorder, remove or reweight alleles, and never reorder GENES;
 // - to add a gene that existing pets also get, APPEND it to the end of GENES;
 // - to change odds or replace alleles, make mochi-g2.js and register it as a new gen.
@@ -29,7 +30,7 @@ export const GENES = [
     ['blush', 'Blush', 55], ['plain', 'Plain', 30], ['freckles', 'Freckles', 15],
   ] },
   { key: 'top', name: 'Top', shows: 'teen', alleles: [
-    ['none', 'Bare', 46], ['nubs', 'Bun ears', 1], ['cat', 'Cat ears', 1], ['antenna', 'Antenna', 24], ['sprout', 'Sprout', 18], ['horns', 'Tiny horns', 10],
+    ['none', 'Bare', 95], ['nubs', 'Bun ears', 1], ['cat', 'Cat ears', 1], ['antenna', 'Antenna', 1], ['sprout', 'Sprout', 1], ['horns', 'Tiny horns', 1],
   ] },
   { key: 'pattern', name: 'Pattern', shows: 'teen', alleles: [
     ['plain', 'Plain', 35], ['dust', 'Powder dust', 25], ['spots', 'Spots', 18], ['swirl', 'Swirl', 12], ['dipped', 'Choco dip', 10],
@@ -48,13 +49,13 @@ export const GENES = [
 // Unique part: a chance inside a chance. Rolled right after GENES.
 export const UNIQUE_CHANCE = 35;
 export const UNIQUE = [
-  { slot: 'tail', name: 'Tail', weight: 40, parts: [
+  { slot: 'tail', name: 'Tail', weight: 50, parts: [
     ['tail_puff', 'Bunny puff', 50], ['tail_curl', 'Curly tail', 30], ['tail_crystal', 'Crystal tail', 15], ['tail_flame', 'Flame tail', 5],
   ] },
-  { slot: 'wings', name: 'Wings', weight: 35, parts: [
+  { slot: 'wings', name: 'Wings', weight: 45, parts: [
     ['wings_feather', 'Feather wings', 50], ['wings_bat', 'Bat wings', 30], ['wings_butterfly', 'Butterfly wings', 15], ['wings_angel', 'Angel wings', 5],
   ] },
-  { slot: 'head', name: 'Head', weight: 25, parts: [
+  { slot: 'head', name: 'Head', weight: 5, parts: [
     ['head_flower', 'Flower crown', 50], ['head_star', 'Star antenna', 30], ['head_crystal', 'Crystal horns', 15], ['head_unicorn', 'Unicorn horn', 5],
   ] },
 ];
@@ -88,8 +89,8 @@ export const MUTATIONS = [
 
 // Display names for raising forms (Teen body from top trait, Adult feature from second trait).
 export const FORMS = {
-  strong: { noun: 'Spikeling', adj: 'Mighty', bodyDesc: 'Soft spikes', featureDesc: 'Little horns' },
-  playful: { noun: 'Boingling', adj: 'Bouncy', bodyDesc: 'A bouncy curl on top', featureDesc: 'Curly tail' },
-  tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby with a belly', featureDesc: 'Chunky feet' },
-  calm: { noun: 'Sproutling', adj: 'Dreamy', bodyDesc: 'Tall with a leaf', featureDesc: 'Halo' },
+  strong: { noun: 'Champling', adj: 'Mighty', bodyDesc: 'Determined brows', featureDesc: 'A tiny fang grin' },
+  playful: { noun: 'Boingling', adj: 'Bouncy', bodyDesc: 'Happy brows, sparkly eyes', featureDesc: 'Curly tail' },
+  tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby, with puffy cheeks', featureDesc: 'Chunky feet' },
+  calm: { noun: 'Dozeling', adj: 'Dreamy', bodyDesc: 'Tall, with a serene face', featureDesc: 'Halo' },
 };

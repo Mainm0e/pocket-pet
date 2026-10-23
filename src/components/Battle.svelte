@@ -165,7 +165,11 @@
     if (r.rewards) {
       rewards = r.rewards;
       game.s = r.state;
-      timer = setTimeout(() => (phase = 'result'), ms + 900);
+      timer = setTimeout(() => {
+        // the result shows the real final score, even if a slow device is still animating the last point
+        shown = { ...shown, you: battle.score.you, foe: battle.score.foe };
+        phase = 'result';
+      }, ms + 900);
       return;
     }
     timer = setTimeout(tick, ms + 60);

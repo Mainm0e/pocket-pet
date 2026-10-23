@@ -43,7 +43,7 @@ The server stores only `dna.code` plus the personality. The full DNA is recomput
 
 | Code | Species | Status | Table |
 |---|---|---|---|
-| `MO2` | Mochi gen 2 | **current** (Season 1, from Oct 2026): new eggs get this. Same genes as gen 1, but ears are very rare | [mochi-g2.js](../src/server/genome/mochi-g2.js) |
+| `MO2` | Mochi gen 2 | **current** (Season 1, from Oct 2026): new eggs get this. Same genes as gen 1, but a clean head is the norm | [mochi-g2.js](../src/server/genome/mochi-g2.js) |
 | `MO1` | Mochi gen 1 | shipped, kept forever (the first Season 1 eggs) | [mochi-g1.js](../src/server/genome/mochi-g1.js) |
 | `SH1` | Shiba gen 1 | shipped, kept forever; ready for a future season | [shiba-g1.js](../src/server/genome/shiba-g1.js) |
 
@@ -67,9 +67,9 @@ Text without a known prefix gets the current one (`daifuku` → `MO1-DAIFUKU`). 
 | Charm | None 45 · Bow 25 · Ribbon 18 · Bell 12 | Teen |
 | Unique part | Tail: Bunny puff · Curly tail · Crystal tail · Flame tail. Wings: Feather · Bat · Butterfly · Angel. Head: Flower crown · Star antenna · Crystal horns · Unicorn horn | Teen (62%), Adult |
 
-**Mochi gen 2** changes only the Top gene's odds: Bare 46 · Antenna 24 · Sprout 18 · Tiny horns 10 · **Bun ears 1 · Cat ears 1**. So about 1 Mochi in 50 has ears, and ears now score 4 rarity points. Gen 1 codes still decode exactly as before (their pets keep their ears). Old v1 saves migrate to `MO1` codes (`codeFromNumber(n, 'MO1')`), never to the current generation.
+**Mochi gen 2** changes only odds: the Top gene is Bare 95 · Bun ears 1 · Cat ears 1 · Antenna 1 · Sprout 1 · Tiny horns 1, and the unique part's slots are Tail 50 · Wings 45 · Head 5 (was 40/35/25). So about 95% of new Mochi have a clean head, and anything on the head is a rare find worth 4 rarity points. Gen 1 codes still decode exactly as before (their pets keep their ears). Old v1 saves migrate to `MO1` codes (`codeFromNumber(n, 'MO1')`), never to the current generation.
 
-Fine DNA (13 values) includes **squish** and **bounce**: how soft the jelly wobble is and how high it hops. So even twins with the same genes move a little differently. Raising forms: Teen body from the top trait (Strong: soft spikes, Playful: a bouncy curl on top, Tough: chubby with a belly, Calm: tall with a leaf) and Adult feature from the second (horns, curly tail, chunky feet, halo).
+Fine DNA (13 values) includes **squish** and **bounce**: how soft the jelly wobble is and how high it hops. So even twins with the same genes move a little differently. Raising forms never grow anything on the head; they show in the **face**. Teen look from the top trait: Strong (Champling): determined brows · Playful (Boingling): happy arched brows, sparkly eyes · Tough (Pudgeling): relaxed brows, chubbier with puffy cheeks · Calm (Dozeling): soft brows, serene half-closed eyes, a bit taller. Adult feature from the second trait: a tiny fang grin (Strong), curly tail, chunky feet, halo.
 
 ### Shiba gen 1
 
@@ -112,7 +112,8 @@ Never: reorder `GENES`, remove or reorder alleles, change a weight in a released
 5. Note it in the changelog: "Gen 2: new coat Honey. Gen 1 pets unchanged."
 
 **Changelog**
-- Oct 2026, Mochi gen 2 (`MO2`): ears (Bun ears, Cat ears) are very rare, 1% each. Gen 1 pets unchanged. Art only (all Mochi): the Playful Teen body is a bouncy curl instead of bunny ears ("Boingling", was "Bunbun").
+- Oct 2026, Mochi gen 2 (`MO2`): a clean head is the norm. Ears, antenna, sprout and tiny horns are 1% each, rare head parts are 5x rarer. Gen 1 pets unchanged.
+- Oct 2026, art only (all Mochi): raising shows in the face instead of growing things: no more Strong spikes, Playful bunny ears, Calm leaf or Strong-adult horns. Forms renamed: Spikeling → Champling, Bunbun → Boingling, Sproutling → Dozeling.
 
 ## 5. Saves
 
