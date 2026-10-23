@@ -136,7 +136,8 @@ try {
   await care('Sleep').click();
   await wait(3500);
   check((await page.locator('.actions button.active').count()) === 1, 'pet goes to sleep');
-  const snored = await page.waitForFunction(() => window.__sfx.includes('snore'), null, { timeout: 15000 }).then(() => true, () => false);
+  // (software WebGL runs the room in slow motion, so the walk to bed takes much longer there)
+  const snored = await page.waitForFunction(() => window.__sfx.includes('snore'), null, { timeout: software ? 90000 : 15000 }).then(() => true, () => false);
   check(snored, 'sleeping pet snores');
   await shot('06-sleep');
   await care('Wake').click();
@@ -148,7 +149,7 @@ try {
   await wait(800);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.__stage, null, { timeout: 120000 });
-  const greeted = await page.locator('.bubble').waitFor({ timeout: 8000 }).then(() => page.locator('.bubble').textContent(), () => '');
+  const greeted = await page.locator('.bubble').waitFor({ timeout: software ? 90000 : 8000 }).then(() => page.locator('.bubble').textContent(), () => '');
   const GREETS = ["You're back!!", 'I missed you SO much!', 'Yay! Yay! You came back!', 'Hi! I missed you!', 'Welcome back!', 'There you are!', 'Oh! Hi there.', 'You came back!', 'Hello again!', '...hi.', '*peeks*', "Oh... it's you."];
   check(GREETS.includes(greeted), `pet greets you when you come back ("${greeted}")`);
   await wait(800);
@@ -163,12 +164,15 @@ try {
   };
   const dismissEvo = async () => {
     if (!(await evo())) return false;
-    await wait(4500);
-    if (await page.getByRole('button', { name: 'Yay!' }).count()) await page.getByRole('button', { name: 'Yay!' }).click();
+    // teen: "Yay!" after the reveal; adult: "Amazing!" on the card a bit later. Wait for whichever shows.
+    const yay = page.getByRole('button', { name: 'Yay!' });
+    const amazing = page.getByRole('button', { name: 'Amazing!' });
+    await Promise.race([yay.waitFor(), amazing.waitFor()]);
+    if (await yay.count()) await yay.click();
     else {
-      await wait(2600);
+      await wait(600);
       await shot('07-adult-card');
-      await page.getByRole('button', { name: 'Amazing!' }).click();
+      await amazing.click();
     }
     await wait(600);
     return true;
