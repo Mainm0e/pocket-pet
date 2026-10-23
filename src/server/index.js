@@ -5,19 +5,19 @@
 
 import { hashString, mulberry32 } from './rng.js';
 import {
-  SEASON, BATTLES_PER_DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, TALENT_MULT, DAY,
+  SEASON, BATTLES_PER_DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, TALENT_MULT, DAY, BOND, MATCH_POINTS, bondLabel,
 } from './constants.js';
 import {
   newPet, catchUp, recordVisit, checkEvolution, act as petAct, hatchTap as petHatchTap,
-  title, dnaString, battleStats, moodModifier, growthProgress, traitTotal, dayKey,
-  weatherFor, isNight, addMark, genomeOf,
+  title, dnaString, playStats, obeyChance, moodModifier, growthProgress, traitTotal, dayKey,
+  weatherFor, isNight, addMark, genomeOf, gainBond, freshDaily,
 } from './pet.js';
 import { decode, randomCode, nudgeCode, codeFromNumber, normalizeCode } from './genome/index.js';
 import { createBattle, stepBattle, makeFriendPet } from './battle.js';
 import { sanitizeRoom, DEFAULT_ROOM } from './room.js';
 
 const KEY = 'pocketpet.db.v1';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 export const BADGES = {
   streak3: { label: 'Hot streak', desc: '3 wins in a row' },
   streak5: { label: 'Unstoppable', desc: '5 wins in a row' },
@@ -42,6 +42,16 @@ function migrate(db) {
     db.seedRegistry = db.pets.map((p) => p.dna.code);
     db.battles = {};
     db.version = 2;
+  }
+  if (db.version < 3) {
+    // v3: the bond stat, and battles became volleyball matches (old fights can't resume).
+    for (const p of db.pets) {
+      const days = p.hatchedAt ? (p.lastUpdated - p.hatchedAt) / DAY : 0;
+      p.bond ??= Math.round(Math.min(50, BOND.START + days * 4 + (p.visits?.streak ?? 0) * 2));
+      p.daily = { ...freshDaily(p.daily?.day ?? null), ...p.daily };
+    }
+    db.battles = {};
+    db.version = 3;
   }
   return db;
 }
@@ -81,7 +91,9 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
     v.traitCap = TRAIT_CAP;
     v.dailyTraitLeft = Math.max(0, DAILY_TRAIT_GAIN - (pet.daily.day === dayKey(t) ? pet.daily.traitGain : 0));
     v.talentMult = TALENT_MULT;
-    v.battleStats = pet.stage === 'egg' ? null : battleStats(pet);
+    v.playStats = pet.stage === 'egg' ? null : playStats(pet);
+    v.bondLabel = bondLabel(pet.bond);
+    v.obey = obeyChance(pet);
     v.mood = moodModifier(pet);
     v.growth = growthProgress(pet, t);
     v.battlesLeft = BATTLES_PER_DAY - (pet.daily.day === dayKey(t) ? pet.daily.battles : 0);
@@ -94,6 +106,7 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
     return {
       now: t,
       season: SEASON,
+      matchPoints: MATCH_POINTS,
       weather: weatherFor(t),
       night: isNight(t),
       pet: viewPet(active(), t),
@@ -170,7 +183,7 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
       const day = dayKey(t);
       const friends = [0, 1, 2].map((i) => {
         const f = makeFriendPet(pet, day, i);
-        return { ...f, title: title(f), battleStats: battleStats(f), genome: genomeOf(f) };
+        return { ...f, title: title(f), playStats: playStats(f), genome: genomeOf(f) };
       });
       // Friends-only seasonal leaderboard (simulated friends for now).
       const board = friends
@@ -189,7 +202,7 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
       const existing = Object.values(db.battles).find((b) => b.petId === pet.id);
       if (existing) return respond(events, { battle: existing.battle, foe: existing.foe });
       if (pet.asleep) return respond(events, { error: 'Shh... your pet is sleeping.' });
-      if (pet.daily.battles >= BATTLES_PER_DAY) return respond(events, { error: 'No battles left today. Come back tomorrow!' });
+      if (pet.daily.battles >= BATTLES_PER_DAY) return respond(events, { error: 'No matches left today. Come back tomorrow!' });
       const idx = Math.max(0, Math.min(2, friendIndex | 0));
       const foePet = makeFriendPet(pet, dayKey(t), idx);
       pet.daily.battles++;
@@ -202,11 +215,12 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
       return respond(events, { battle, foe });
     },
 
-    battleStep(id, move) {
+    /** Play one touch of the match. `cmd` ('cheer' | 'calm') is the player's only input. */
+    battleStep(id, cmd) {
       const entry = db.battles[id];
-      if (!entry) return respond([], { error: 'Battle not found' });
+      if (!entry) return respond([], { error: 'Match not found' });
       const { battle } = entry;
-      const events = stepBattle(battle, move);
+      const events = stepBattle(battle, cmd);
       let rewards = null;
       if (battle.over) {
         delete db.battles[id];
@@ -236,6 +250,7 @@ export function createServer({ storage, clock = () => Date.now() } = {}) {
           pet.care.happiness = Math.max(5, pet.care.happiness - 3);
         }
         pet.care.energy = Math.max(5, pet.care.energy - 6);
+        rewards.bond = gainBond(pet, BOND.MATCH, t);
         rewards.marks = markEvents.map((e) => e.mark);
         rewards.winner = battle.winner;
         rewards.record = clone(b);

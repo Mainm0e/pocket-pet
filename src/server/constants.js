@@ -20,6 +20,26 @@ export const ADULT_AGE = 3 * DAY;
 export const ADULT_TRAITS = 70;
 
 export const BATTLES_PER_DAY = 5;
+export const MATCH_POINTS = 5; // volleyball: first to 5 wins
+
+// Bond: how close owner and pet are. Decides whether the pet listens in a match.
+export const BOND = {
+  START: 20,
+  DAILY_CAP: 8, // the most bond a day can add: earned slowly, by coming back
+  CARE: 1, // each successful care action
+  PAT: 0.25,
+  PATS_PER_DAY: 8, // pats that count (more are welcome, but don't add)
+  VISIT: 2, // first visit of the day
+  MATCH: 1, // playing a match together, win or lose
+  NEGLECT: 0.3, // lost per hour while care is very low
+};
+export const BOND_LEVELS = [
+  [75, 'Best friends'],
+  [50, 'Good friends'],
+  [25, 'Getting close'],
+  [0, 'Still shy of you'],
+];
+export const bondLabel = (b) => BOND_LEVELS.find(([min]) => b >= min)[1];
 export const MAX_CATCHUP = 7 * DAY; // decay stops accumulating after a week away
 export const MAX_POOPS = 4;
 
@@ -42,10 +62,10 @@ export const TRAIT_INFO = {
 };
 
 export const TEMPERAMENTS = {
-  bold: { label: 'Bold', desc: '+10% attack in battle' },
-  shy: { label: 'Shy', desc: '+15% defense in battle' },
-  stubborn: { label: 'Stubborn', desc: 'May ignore your cheers when unhappy' },
-  cheerful: { label: 'Cheerful', desc: 'Good-mood battle bonus is doubled' },
+  bold: { label: 'Bold', desc: 'Hits harder, but gets over-excited' },
+  shy: { label: 'Shy', desc: 'Great receives, but gets nervous' },
+  stubborn: { label: 'Stubborn', desc: 'Ignores you more when unhappy' },
+  cheerful: { label: 'Cheerful', desc: 'Good-mood match bonus is doubled' },
 };
 
 export const QUIRKS = {
@@ -64,8 +84,8 @@ export const MUTATIONS = {
 };
 
 export const MARKS = {
-  star: { label: 'Victory star', desc: 'Won its first battle' },
-  scar: { label: 'Rival scar', desc: 'Won 3 battles' },
+  star: { label: 'Victory star', desc: 'Won its first match' },
+  scar: { label: 'Rival scar', desc: 'Won 3 matches' },
   aura: { label: 'Loved aura', desc: 'Grew up to an adult with great care' },
   sun: { label: 'Sunny mark', desc: 'Visited 3 days in a row' },
   rainbow: { label: 'Rainbow mark', desc: 'Visited 7 days in a row' },

@@ -1,6 +1,7 @@
 <script>
   import { untrack } from 'svelte';
   import { game } from '../lib/game.svelte.js';
+  import { sfx, played } from '../lib/sound.js';
   import { lookOf } from '../species/index.js';
   import Meters from './Meters.svelte';
   import Sheet from './Sheet.svelte';
@@ -30,13 +31,17 @@
           onAnchor: (a) => (anchor = a),
           onSelect: (id) => (selected = id),
           onItemMoved: (id, x, z) => decorate?.moved(id, x, z),
+          onSound: sfx,
         })
       )
       .then((s) => {
         if (!live) return s.dispose();
         st = s;
         stage = s;
-        if (new URLSearchParams(location.search).has('dev')) window.__stage = s; // for tests
+        if (new URLSearchParams(location.search).has('dev')) {
+          window.__stage = s; // for tests
+          window.__sfx = played;
+        }
       })
       .catch(() => (failed = true));
     return () => {
@@ -139,6 +144,7 @@
     if (pet.stage === 'egg') return game.hatchTap();
     if (pet.asleep) return game.say('Zzz...');
     game.play('squish', 600);
+    game.act('pat'); // pats grow the bond a little (the server caps it)
     game.say(['Hehe!', 'Squish!', 'That tickles!', 'More pats!'][Math.floor(Math.random() * 4)], 1400);
   }
 </script>
