@@ -6,6 +6,7 @@ export const SHOWCASE_BY_SPECIES = {
     head_flower: 'MO1-0', head_star: 'MO1-G', head_crystal: 'MO1-5', head_unicorn: 'MO1-3E',
     shiny: 'MO1-Y', hetero: 'MO1-2W',
     starry: 'MO1-F4E', choco: 'MO1-F9', cube: 'MO1-S10', drop: 'MO1-S8',
+    nubs: 'MO2-2B', cat: 'MO2-6Z', // gen 2: ears are a 1-in-50 rarity
   },
   shiba: {
     tail_fox: 'SH1-W', tail_double: 'SH1-E', tail_crystal: 'SH1-26', tail_flame: 'SH1-3A',
