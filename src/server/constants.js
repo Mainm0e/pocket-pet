@@ -32,7 +32,20 @@ export const BOND = {
   VISIT: 2, // first visit of the day
   MATCH: 1, // playing a match together, win or lose
   NEGLECT: 0.3, // lost per hour while care is very low
+  WISH: 3, // granting the daily wish (on top of the daily cap: it only happens once a day)
 };
+
+// The daily wish: one thing the pet wants today. Picked from its code and the date.
+export const WISHES = {
+  feed: { label: 'a yummy snack', ask: "I'm craving a snack!", icon: '🍙' },
+  play: { label: 'to play ball', ask: 'Can we play ball?', icon: '🎾' },
+  bath: { label: 'a bubble bath', ask: 'I want a bubble bath!', icon: '🛁' },
+  train: { label: 'to train together', ask: "Let's get strong!", icon: '🏋️' },
+  pat: { label: 'lots of pats', ask: 'Pat me! Pat me lots!', icon: '🤚' },
+  match: { label: 'a volleyball match', ask: "Let's play volleyball!", icon: '🏐' },
+};
+export const WISH_PATS = 3; // pats needed for the 'pat' wish
+export const GREET_AWAY = 30 * 60_000; // away this long and the pet greets you when you come back
 export const BOND_LEVELS = [
   [75, 'Best friends'],
   [50, 'Good friends'],

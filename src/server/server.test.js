@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { createServer } from './index.js';
 import { createPersonality, QUIZ } from './dna.js';
 import { codeFromNumber } from './genome/index.js';
-import { newPet, catchUp, act, gainTrait, checkEvolution, dnaString, title, traitTotal, gainBond, obeyChance, recordVisit } from './pet.js';
+import { newPet, catchUp, act, gainTrait, checkEvolution, dnaString, title, traitTotal, gainBond, obeyChance, recordVisit, wishFor, grantWish, dayKey } from './pet.js';
 import { createBattle, stepBattle, makeFriendPet } from './battle.js';
-import { HOUR, DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, CARE_FLOOR, BATTLES_PER_DAY, BOND, MATCH_POINTS } from './constants.js';
+import { HOUR, DAY, TRAIT_CAP, DAILY_TRAIT_GAIN, CARE_FLOOR, BATTLES_PER_DAY, BOND, MATCH_POINTS, WISHES, WISH_PATS, GREET_AWAY } from './constants.js';
 
 const memStorage = () => {
   const m = new Map();
@@ -225,6 +225,49 @@ describe('bond', () => {
   });
 });
 
+describe('daily wish', () => {
+  it('is one fixed wish per pet per day, and personality tips it', () => {
+    const p = hatched(3);
+    expect(wishFor(p, '2026-10-20')).toBe(wishFor(p, '2026-10-20'));
+    const seen = new Set();
+    for (let d = 1; d <= 28; d++) seen.add(wishFor(p, `2026-11-${String(d).padStart(2, '0')}`));
+    expect(seen.size).toBeGreaterThan(3); // it changes from day to day
+    const count = (quirk, kind) => {
+      const q = hatched(3);
+      q.dna.quirk = quirk;
+      let n = 0;
+      for (let d = 0; d < 300; d++) if (wishFor(q, `day${d}`) === kind) n++;
+      return n;
+    };
+    expect(count('hates_baths', 'bath')).toBe(0);
+    expect(count('snack_lover', 'feed')).toBeGreaterThan(count('night_owl', 'feed') * 2);
+  });
+  it('is granted once, by the right action, for bond and happiness', () => {
+    const p = hatched(3);
+    const day = dayKey(T0 + HOUR);
+    const kind = wishFor(p, day);
+    const wrong = Object.keys(WISHES).find((k) => k !== kind && k !== 'pat');
+    expect(grantWish(p, wrong, T0 + HOUR)).toEqual([]);
+    if (kind === 'pat') p.daily.pats = WISH_PATS;
+    const bond = p.bond;
+    expect(grantWish(p, kind, T0 + HOUR)).toEqual([{ type: 'wish', kind, bond: BOND.WISH }]);
+    expect(p.bond).toBe(bond + BOND.WISH);
+    expect(grantWish(p, kind, T0 + 2 * HOUR)).toEqual([]); // once a day
+  });
+  it('a pat wish needs a few pats', () => {
+    const p = hatched(3);
+    let day = 0;
+    while (wishFor(p, dayKey(T0 + day * DAY)) !== 'pat') day++;
+    const t = T0 + day * DAY;
+    for (let i = 1; i < WISH_PATS; i++) {
+      act(p, 'pat', null, t);
+      expect(grantWish(p, 'pat', t)).toEqual([]);
+    }
+    act(p, 'pat', null, t);
+    expect(grantWish(p, 'pat', t)).toHaveLength(1);
+  });
+});
+
 describe('server API', () => {
   it('runs the full loop: egg -> hatch -> care -> battle limit', async () => {
     let clock = T0;
@@ -277,6 +320,21 @@ describe('server API', () => {
     expect(v.genome.species).toBe('mochi'); // old 2D Mochi pets become 3D Mochi
     expect(v.bond).toBeGreaterThanOrEqual(BOND.START); // v3: pets get a bond
     expect(v.bondLabel).toBeTruthy();
+  });
+  it('greets you when you come back after a while, and shows today\'s wish', async () => {
+    let clock = T0;
+    const s = createServer({ storage: memStorage(), clock: () => clock });
+    await s.startEgg([]);
+    for (let i = 0; i < 5; i++) await s.hatchTap();
+    let r = await s.getState();
+    expect(r.state.pet.wish).toMatchObject({ done: false });
+    expect(WISHES[r.state.pet.wish.kind]).toBeTruthy();
+    clock += 10 * 60_000;
+    r = await s.getState();
+    expect(r.events.some((e) => e.type === 'greet')).toBe(false); // only 10 minutes
+    clock += GREET_AWAY;
+    r = await s.getState();
+    expect(r.events.find((e) => e.type === 'greet')).toMatchObject({ bond: r.state.pet.bond });
   });
   it('the client cannot mutate server state through returned views', async () => {
     const s = createServer({ storage: memStorage(), clock: () => T0 });

@@ -67,6 +67,8 @@ page.on('console', (m) => m.type() === 'error' && errors.push('console: ' + m.te
 const shot = (n) => page.screenshot({ path: `${OUT}/${n}.png`, timeout: 90000 });
 const wait = (ms) => page.waitForTimeout(ms);
 const btn = (name) => page.getByRole('button', { name, exact: false }).first();
+// the action bar (other buttons, like the wish bubble, can mention "play" too)
+const care = (name) => page.locator('.actions button', { hasText: name }).first();
 const evo = () => page.locator('.evo').count();
 
 try {
@@ -97,12 +99,33 @@ try {
 
   // ---- care ----
   for (const a of ['Feed', 'Play']) {
-    await btn(a).click();
+    await care(a).click();
     await wait(2500);
   }
   await shot('04-care');
   const heard = await page.evaluate(() => window.__sfx.slice());
   check(['hatch', 'chomp', 'gulp', 'jump', 'pat'].every((n) => heard.includes(n)), `care sounds play (${[...new Set(heard)].join(' ')})`);
+  // ---- daily wish ----
+  const wishKind = await page.locator('.wish').getAttribute('data-kind');
+  if (wishKind === 'bath' || wishKind === 'train') {
+    await btn('More').click();
+    await wait(400);
+    await page.locator('.grid button', { hasText: wishKind === 'bath' ? 'Bath' : 'Train' }).click();
+    await wait(4000);
+  } else if (wishKind === 'pat') {
+    for (let i = 0; i < 3; i++) {
+      const p = await page.evaluate(() => window.__stage.screenPosOfPet());
+      await page.mouse.click(p.x, p.y);
+      await wait(800);
+    }
+  }
+  if (wishKind !== 'match') {
+    const granted = await page.locator('.wish.done').waitFor({ timeout: 10000 }).then(() => true, () => false);
+    check(granted, `the daily wish (${wishKind}) is granted by doing it`);
+    await shot('04b-wish');
+  }
+  await wait(2500);
+
   await btn('More').click();
   await wait(400);
   await btn('Pet card').click();
@@ -110,14 +133,27 @@ try {
   check((await page.locator('.gene').count()) > 8, 'pet card shows genes');
   await shot('05-card');
   await btn('Close').click();
-  await btn('Sleep').click();
+  await care('Sleep').click();
   await wait(3500);
   check((await page.locator('.actions button.active').count()) === 1, 'pet goes to sleep');
   const snored = await page.waitForFunction(() => window.__sfx.includes('snore'), null, { timeout: 15000 }).then(() => true, () => false);
   check(snored, 'sleeping pet snores');
   await shot('06-sleep');
-  await btn('Wake').click();
+  await care('Wake').click();
   await wait(1500);
+
+  // ---- coming back after a while: a greeting ----
+  if (!(await page.locator('.panel').count())) await page.locator('.toggle').click();
+  await page.locator('.panel button', { hasText: '+1h' }).click();
+  await wait(800);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!window.__stage, null, { timeout: 120000 });
+  const greeted = await page.locator('.bubble').waitFor({ timeout: 8000 }).then(() => page.locator('.bubble').textContent(), () => '');
+  const GREETS = ["You're back!!", 'I missed you SO much!', 'Yay! Yay! You came back!', 'Hi! I missed you!', 'Welcome back!', 'There you are!', 'Oh! Hi there.', 'You came back!', 'Hello again!', '...hi.', '*peeks*', "Oh... it's you."];
+  check(GREETS.includes(greeted), `pet greets you when you come back ("${greeted}")`);
+  await wait(800);
+  await shot('06b-greet');
+  await wait(3000);
 
   // ---- growing up with the dev clock ----
   const dev = async (label) => {
@@ -139,7 +175,7 @@ try {
   };
   const act = async (name) => {
     if (await evo()) return;
-    await btn(name).click();
+    await care(name).click();
     await wait(300);
   };
   const more = async (name) => {
@@ -166,7 +202,7 @@ try {
   await shot('08-adult-room');
 
   // ---- furniture: collision + taps ----
-  if (await page.locator('.actions button.active').count()) await btn('Wake').click();
+  if (await page.locator('.actions button.active').count()) await care('Wake').click();
   await wait(2500);
   let overlap = 0;
   for (let i = 0; i < 30; i++) {
@@ -202,6 +238,7 @@ try {
   check(dbg.closest >= 0.9, `the ball never goes through a pet (closest ${dbg.closest}, 1 = touching${close.length ? '; ' + close.join(', ') : ''})`);
   const finalScore = (await page.locator('.final').textContent()).split('–').map(Number);
   check(Math.max(...finalScore) === 5, 'match is first to 5');
+  if (wishKind === 'match') check((await page.locator('.box').textContent()).includes('Wish granted'), 'the daily wish (match) is granted by playing');
   const matchSounds = await page.evaluate(() => window.__sfx.slice(-300));
   check(['serve', 'whistle'].every((n) => matchSounds.includes(n)) && matchSounds.some((n) => ['bump', 'spike'].includes(n)), 'match sounds play');
   await shot('11-battle-result');
@@ -262,7 +299,7 @@ try {
   await shot('14-seed-lab');
   check((await page.locator('.gene').count()) > 8, 'Seed Lab shows genes');
 } catch (err) {
-  const msg = 'crashed: ' + err.message.split('\n')[0];
+  const msg = 'crashed: ' + err.message.split('\n').slice(0, 4).join(' | ');
   console.log('FAIL ' + msg);
   failures.push(msg);
   await shot('crash').catch(() => {});

@@ -62,6 +62,7 @@
       poops: $state.snapshot(pet.poops),
       temperament: pet.dna.temperament,
       care: $state.snapshot(pet.care),
+      bond: pet.bond,
       instant: firstRoom,
     });
     firstRoom = false;
@@ -82,6 +83,18 @@
   $effect(() => {
     stage?.setPaused(!!(game.battleOpen || game.evolution));
   });
+  // The welcome back waits until the pet is actually on screen (the model loads in the background).
+  $effect(() => {
+    const g = game.greet;
+    if (!g || !stage || anchor.x <= -999 || game.battleOpen) return;
+    untrack(() => {
+      game.greet = null;
+      setTimeout(() => {
+        game.play(g.fx, 4000);
+        game.say(g.line, 2600);
+      }, 500);
+    });
+  });
 
   // Idle chatter that hints at needs.
   $effect(() => {
@@ -95,6 +108,7 @@
       if (c.energy < 25) lines.push('So sleepy...');
       if (c.happiness < 40) lines.push('Play with me?');
       if (pet.poops.length >= 2) lines.push('Ew, messy!');
+      if (pet.wish && !pet.wish.done && Math.random() < 0.5) lines.push(pet.wish.ask);
       if (c.comfort < 30) lines.push('I feel icky... bath?');
       if (!lines.length) {
         lines.push(pet.genome.species === 'shiba' ? 'Wan!' : 'Puni puni!', 'Hehe', '*wiggle*', 'I like it here!');
@@ -145,7 +159,9 @@
     if (pet.asleep) return game.say('Zzz...');
     game.play('squish', 600);
     game.act('pat'); // pats grow the bond a little (the server caps it)
-    game.say(['Hehe!', 'Squish!', 'That tickles!', 'More pats!'][Math.floor(Math.random() * 4)], 1400);
+    // a pet that doesn't know you well yet is a bit jumpy about it
+    const lines = pet.bond < 25 && Math.random() < 0.5 ? ['Eep!', 'Oh!', '...!'] : pet.bond >= 75 ? ['Hehe!', 'I love pats!', 'More, more!', '♥'] : ['Hehe!', 'Squish!', 'That tickles!', 'More pats!'];
+    game.say(lines[Math.floor(Math.random() * lines.length)], 1400);
   }
 </script>
 
@@ -173,6 +189,22 @@
       <Meters care={pet.care} onclick={() => (game.sheet = 'stats')} />
     {/if}
   </header>
+
+  {#if !egg && pet.wish}
+    <button
+      class="wish"
+      class:done={pet.wish.done}
+      data-kind={pet.wish.kind}
+      onclick={() => game.say(pet.wish.done ? 'That was the best!' : pet.wish.ask, 2200)}
+      aria-label={pet.wish.done ? "Today's wish is granted" : `Today's wish: ${pet.wish.label}`}
+    >
+      {#if pet.wish.done}
+        💖 Wish granted!
+      {:else}
+        💭 Wants {pet.wish.label} {pet.wish.icon}{#if pet.wish.kind === 'pat'} <small>{pet.wish.pats}/{pet.wish.need}</small>{/if}
+      {/if}
+    </button>
+  {/if}
 
   {#if game.toast}
     {#key game.toast.id}<div class="toast">{game.toast.text}</div>{/key}
@@ -287,10 +319,34 @@
   }
   .name strong { font-size: 18px; }
   .name small { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+  .wish {
+    position: absolute;
+    left: 12px;
+    top: calc(78px + env(safe-area-inset-top));
+    z-index: 6;
+    min-height: 44px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 13px;
+    box-shadow: 0 3px 0 var(--shadow);
+    max-width: calc(100vw - 24px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: float 3s ease-in-out infinite;
+  }
+  .wish small { color: var(--ink-soft); font-weight: 800; }
+  .wish.done { background: #ffe3ef; color: #8a2050; animation: none; }
+  @keyframes float { 50% { transform: translateY(-3px); } }
+  @media (prefers-reduced-motion: reduce) { .wish { animation: none; } }
   .toast {
     position: absolute;
     left: 50%;
-    top: calc(76px + env(safe-area-inset-top));
+    top: calc(132px + env(safe-area-inset-top));
     transform: translateX(-50%);
     padding: 8px 16px;
     border-radius: 999px;
