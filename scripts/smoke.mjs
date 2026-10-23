@@ -101,6 +101,8 @@ try {
   // let each scene finish before the next one (in slow motion, Play would interrupt the meal)
   const heardAll = (names) =>
     page.waitForFunction((n) => n.every((x) => window.__sfx.includes(x)), names, { timeout: software ? 90000 : 10000 }).catch(() => {});
+  // on a slow machine the new baby's model is still building after hatching: wait for it
+  await page.waitForFunction(() => window.__stage.debugPet().ready, null, { timeout: software ? 120000 : 20000 }).catch(() => {});
   await care('Feed').click();
   await heardAll(['chomp', 'gulp']);
   await wait(1500);
