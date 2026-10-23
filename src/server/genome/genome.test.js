@@ -16,12 +16,12 @@ const LOCKED = {
   'MO1-MOCHI2': { name: 'Mipami', strand: 'AAAGAAAAAAAAATATATAAAA', print: 'FP-493F15', shape: 'wide', topper: 'strawberry' },
   'MO1-ICHIGO': { name: 'Nupami', strand: 'ACAAAAAGAAATAATAAAAGAA', print: 'FP-5CA8D3', flavor: 'yuzu', topper: 'cherry' },
   'MO1-ZZZZZZ': { name: 'Chichichi', strand: 'TTACAGAAAGAAATAAAAAAAA', print: 'FP-43EFB4', flavor: 'ube', shape: 'drop' },
-  // Mochi gen 2 (ears very rare)
+  // Mochi gen 2 (a clean head is the norm)
   'MO2-000001': { name: 'Pakipo', strand: 'ACAGACAGATAATAAAAAAATT', print: 'FP-033A17', flavor: 'yuzu', top: 'none' },
-  'MO2-DAIFUKU': { name: 'Mobopo', strand: 'AGAAATAGAATTACAAAAACAA', print: 'FP-CFF0A4', flavor: 'matcha', top: 'horns' },
+  'MO2-DAIFUKU': { name: 'Mobopo', strand: 'AGAAATAGAAAGACAAAAACAA', print: 'FP-CFF0A4', flavor: 'matcha', top: 'cat' },
   'MO2-MOCHI2': { name: 'Komin', strand: 'ATAATAAAAAAAATAAAAAATG', print: 'FP-A26EC6', flavor: 'sakura', top: 'none' },
   'MO2-ICHIGO': { name: 'Rutan', strand: 'ATACAGAGAAAAATAAAAAATT', print: 'FP-4A08A3', flavor: 'sakura', top: 'none' },
-  'MO2-ZZZZZZ': { name: 'Patako', strand: 'AAAAATATAAATAATAAAATAA', print: 'FP-4974BB', flavor: 'plain', top: 'nubs' },
+  'MO2-ZZZZZZ': { name: 'Patako', strand: 'AAAAATATAAAAAATAAAATAA', print: 'FP-4974BB', flavor: 'plain', top: 'none' },
 };
 
 describe('core math is frozen', () => {
@@ -105,15 +105,17 @@ describe.each(GENERATIONS.map((T) => [T.PREFIX + T.GEN, T]))('odds match the %s 
 });
 
 describe('Mochi gen 2', () => {
-  it('ears are very rare (about 1 in 50), gen 1 is unchanged', () => {
+  it('a clean head is the norm: ears, antenna, sprout, horns and head parts are rare', () => {
     const N = 20000;
-    const ears = (prefix) => {
+    const share = (prefix, test) => {
       let n = 0;
-      for (let i = 0; i < N; i++) if (['nubs', 'cat'].includes(decode(`${prefix}-${codeFromNumber(i * 7919 + 13).split('-')[1]}`).genes.top)) n++;
+      for (let i = 0; i < N; i++) if (test(decode(`${prefix}-${codeFromNumber(i * 7919 + 13).split('-')[1]}`))) n++;
       return n / N;
     };
-    expect(ears('MO2')).toBeLessThan(0.03);
-    expect(ears('MO1')).toBeGreaterThan(0.35); // old pets keep their ears
+    const grown = (d) => d.genes.top !== 'none' || d.unique.slot === 'head';
+    expect(share('MO2', grown)).toBeLessThan(0.08);
+    expect(share('MO2', (d) => ['nubs', 'cat'].includes(d.genes.top))).toBeLessThan(0.03);
+    expect(share('MO1', (d) => ['nubs', 'cat'].includes(d.genes.top))).toBeGreaterThan(0.35); // gen 1 pets keep theirs
   });
 });
 

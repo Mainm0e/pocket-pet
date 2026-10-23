@@ -98,11 +98,18 @@ try {
   check((await page.locator('.name small').textContent()).includes('Baby'), 'baby stage after hatching');
 
   // ---- care ----
-  for (const a of ['Feed', 'Play']) {
-    await care(a).click();
-    await wait(2500);
-  }
+  // let each scene finish before the next one (in slow motion, Play would interrupt the meal)
+  const heardAll = (names) =>
+    page.waitForFunction((n) => n.every((x) => window.__sfx.includes(x)), names, { timeout: software ? 90000 : 10000 }).catch(() => {});
+  await care('Feed').click();
+  await heardAll(['chomp', 'gulp']);
+  await wait(1500);
+  await care('Play').click();
+  await heardAll(['jump', 'pat']);
+  await wait(1500);
   await shot('04-care');
+  // (software WebGL runs scenes in slow motion: wait for the sounds rather than a fixed time)
+  await page.waitForFunction(() => ['hatch', 'chomp', 'gulp', 'jump', 'pat'].every((n) => window.__sfx.includes(n)), null, { timeout: software ? 90000 : 10000 }).catch(() => {});
   const heard = await page.evaluate(() => window.__sfx.slice());
   check(['hatch', 'chomp', 'gulp', 'jump', 'pat'].every((n) => heard.includes(n)), `care sounds play (${[...new Set(heard)].join(' ')})`);
   // ---- daily wish ----
@@ -225,6 +232,8 @@ try {
 
   // ---- volleyball ----
   await wait(2000);
+  // the dev clock has moved on several days since the wish check: read today's wish now
+  const matchWish = (await page.locator('.wish').getAttribute('data-kind')) === 'match' && !(await page.locator('.wish.done').count());
   await more('Volleyball');
   await wait(3000);
   check((await page.locator('.bond').textContent()).includes('listens'), 'match screen shows how well the pet listens');
@@ -239,15 +248,19 @@ try {
   check(true, `volleyball match finished (${(await page.locator('.final').textContent()).trim()}, mid-match ${midScore.replace(/\s+/g, ' ').trim()})`);
   const dbg = await page.evaluate(() => window.__court.debug());
   const close = Object.entries(dbg.byPhase).filter(([, q]) => q < 0.9).map(([k, q]) => `${k} ${q}`);
-  check(dbg.closest >= 0.9, `the ball never goes through a pet (closest ${dbg.closest}, 1 = touching${close.length ? '; ' + close.join(', ') : ''})`);
+  check(dbg.closest >= 0.99, `the ball never goes through a pet (closest ${dbg.closest}, 1 = touching)`);
+  // the moves themselves should already avoid the pets; software WebGL (~4 fps) fires them up to a frame late
+  check(software || dbg.planned >= 0.9, `the moves keep the ball off the pets (${dbg.planned}${close.length ? '; ' + close.join(', ') : ''})`);
   const finalScore = (await page.locator('.final').textContent()).split('–').map(Number);
   check(Math.max(...finalScore) === 5, 'match is first to 5');
-  if (wishKind === 'match') check((await page.locator('.box').textContent()).includes('Wish granted'), 'the daily wish (match) is granted by playing');
+  if (matchWish) check((await page.locator('.box').textContent()).includes('Wish granted'), 'the daily wish (match) is granted by playing');
   const matchSounds = await page.evaluate(() => window.__sfx.slice(-300));
   check(['serve', 'whistle'].every((n) => matchSounds.includes(n)) && matchSounds.some((n) => ['bump', 'spike'].includes(n)), 'match sounds play');
   await shot('11-battle-result');
   await btn('Back home').click();
   await wait(1500);
+  // let any scene the player started finish first (slow under software WebGL)
+  await page.waitForFunction(() => !window.__stage.debugPet().busy, null, { timeout: software ? 90000 : 20000 }).catch(() => {});
   const before = await page.evaluate(() => window.__sfx.length);
   await wait(10000); // leave the pet alone: its idle wandering must stay quiet
   const idle = await page.evaluate((n) => window.__sfx.slice(n).filter((s) => ['jump', 'pat', 'step'].includes(s)), before);
