@@ -1493,7 +1493,7 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
       return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height };
     },
     debugPet() {
-      return { x: M.x, z: M.z, r: petR, enterId: M.enterId ?? null, obstacles: obstacles(), busy: now() < M.busyUntil && !M.sleeping };
+      return { x: M.x, z: M.z, r: petR, enterId: M.enterId ?? null, obstacles: obstacles(), busy: now() < M.busyUntil && !M.sleeping, ready: !!model && model.stage !== 'egg' };
     },
     /** A free floor spot for a new item of this kind. */
     spotFor(kind) {
