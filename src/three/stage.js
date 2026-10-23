@@ -1063,7 +1063,10 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
     if (paused) return;
     resize();
     const t = now();
-    const dt = Math.min(0.05, t - lastT);
+    // Real time (up to 1/4 s), so a slow phone doesn't play the room in slow motion;
+    // the pet and props move in small steps so springs and bounces stay stable.
+    const dt = Math.min(0.25, t - lastT);
+    const subs = Math.ceil(dt / 0.03) || 1;
     if (t - lastT > 0.034 && t > 2) slow++;
     else slow = Math.max(0, slow - 0.5);
     if (slow > 45 && ratio > 1) {
@@ -1096,8 +1099,10 @@ export async function createStage(canvas, { onTapPet, onTapPoop, onTapItem, onAn
     }
     applyLighting(dt);
 
-    if (model) animatePet(t, dt);
-    animateProps(dt);
+    for (let i = 0; i < subs; i++) {
+      if (model) animatePet(t, dt / subs);
+      animateProps(dt / subs);
+    }
     for (const g of poopObjs.values()) {
       if (g.userData.grow < 1) {
         g.userData.grow = Math.min(1, g.userData.grow + dt * 3);
