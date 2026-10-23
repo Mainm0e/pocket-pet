@@ -232,6 +232,11 @@ try {
 
   // ---- volleyball ----
   await wait(2000);
+  // a tired pet may have put itself to bed: wake it to play
+  if (await page.locator('.actions button.active').count()) {
+    await care('Wake').click();
+    await wait(1500);
+  }
   // the dev clock has moved on several days since the wish check: read today's wish now
   const matchWish = (await page.locator('.wish').getAttribute('data-kind')) === 'match' && !(await page.locator('.wish.done').count());
   await more('Volleyball');
