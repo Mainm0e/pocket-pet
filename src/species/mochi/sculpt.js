@@ -36,8 +36,8 @@ export function sculptMochi(P) {
   const horns = [];
   const s2 = [-1, 1];
 
-  // ---- top gene (from Teen); bunny ears from the Playful form replace small ears ----
-  const earTop = form === 'playful' ? 'bunny' : topGene;
+  // ---- top gene (from Teen) ----
+  const earTop = topGene;
   if (earTop === 'nubs') for (const s of s2) add(sphere([s * 0.24 * w, T - 0.08, 0], 0.11 * earSize), 0.07);
   if (earTop === 'cat')
     for (const s of s2) {
@@ -47,14 +47,26 @@ export function sculptMochi(P) {
       ears.push(e);
       add(e, 0.06);
     }
-  if (earTop === 'bunny')
-    for (const s of s2) {
-      const base = [s * 0.17 * w, T - 0.08, -0.03];
-      const tip = [s * (0.25 * w + earTilt * 0.25), T + 0.42 * earSize, -0.07];
-      const e = squash(capsule(base, tip, 0.1, 0.085), base, [1, 1, 0.58]);
-      ears.push(e);
-      add(e, 0.07);
+  // ---- Playful Teen: a bouncy curl springing from the crown (like a cowlick) ----
+  if (form === 'playful') {
+    const k = earSize; // the fingerprint makes every curl a little different
+    const tilt = earTilt * 0.5;
+    const pts = [
+      [0, T - 0.05, 0.02],
+      [0.01 + tilt * 0.2, T + 0.09 * k, 0],
+      [0.035 + tilt * 0.4, T + 0.18 * k, 0.02],
+      [0.085 + tilt * 0.5, T + 0.21 * k, 0.06],
+      [0.12 + tilt * 0.5, T + 0.16 * k, 0.09],
+      [0.1 + tilt * 0.4, T + 0.1 * k, 0.1],
+      [0.065 + tilt * 0.3, T + 0.115 * k, 0.085],
+    ];
+    const sc = 1.2; // a touch bigger and plumper than a hair, so it reads as a curl
+    const P0 = pts.map(([x, y, z]) => [x * sc, T + (y - T) * sc, z * sc]);
+    for (let i = 0; i < P0.length - 1; i++) {
+      const r0 = 0.07 - i * 0.0065;
+      add(capsule(P0[i], P0[i + 1], r0, r0 - 0.0065), i === 0 ? 0.07 : 0.014);
     }
+  }
   if (topGene === 'horns' || feature === 'strong')
     for (const s of s2) {
       const hn = capsule([s * 0.15 * w, T - 0.04, 0.08], [s * 0.19 * w, T + 0.11, 0.1], 0.055, 0.016);
@@ -166,6 +178,6 @@ export function sculptMochi(P) {
       }
     return c;
   };
-  const mesh = meshField(f, [-0.8 * w - 0.1, -0.02, -0.75 * w - 0.25], [0.8 * w + 0.1, T + (earTop === 'bunny' ? 0.5 : earTop === 'cat' ? 0.28 : 0.2), 0.75 * w + 0.15], 0.015 * (P.detail ?? 1), paint);
+  const mesh = meshField(f, [-0.8 * w - 0.1, -0.02, -0.75 * w - 0.25], [0.8 * w + 0.1, T + (form === 'playful' ? 0.36 : earTop === 'cat' ? 0.28 : 0.2), 0.75 * w + 0.15], 0.015 * (P.detail ?? 1), paint);
   return { mesh, spots };
 }

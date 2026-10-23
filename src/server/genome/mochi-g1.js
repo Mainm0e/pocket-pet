@@ -88,7 +88,7 @@ export const MUTATIONS = [
 // Display names for raising forms (Teen body from top trait, Adult feature from second trait).
 export const FORMS = {
   strong: { noun: 'Spikeling', adj: 'Mighty', bodyDesc: 'Soft spikes', featureDesc: 'Little horns' },
-  playful: { noun: 'Bunbun', adj: 'Bouncy', bodyDesc: 'Bunny ears', featureDesc: 'Curly tail' },
+  playful: { noun: 'Boingling', adj: 'Bouncy', bodyDesc: 'A bouncy curl on top', featureDesc: 'Curly tail' },
   tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby with a belly', featureDesc: 'Chunky feet' },
   calm: { noun: 'Sproutling', adj: 'Dreamy', bodyDesc: 'Tall with a leaf', featureDesc: 'Halo' },
 };

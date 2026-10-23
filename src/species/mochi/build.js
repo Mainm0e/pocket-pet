@@ -312,7 +312,7 @@ async function buildMochi(look, detail) {
   if (feature === 'calm') {
     const halo = torus(glossMat('#FFD34D', { emissive: new THREE.Color('#FFB000'), emissiveIntensity: 0.6 }), 0.17, 0.022);
     halo.rotation.x = Math.PI / 2;
-    halo.position.set(0, crown.y + (form === 'playful' ? 0.55 : 0.22), 0);
+    halo.position.set(0, crown.y + (form === 'playful' ? 0.34 : 0.22), 0);
     body.add(halo);
     parts.halo = halo;
   }

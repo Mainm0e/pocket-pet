@@ -43,7 +43,8 @@ The server stores only `dna.code` plus the personality. The full DNA is recomput
 
 | Code | Species | Status | Table |
 |---|---|---|---|
-| `MO1` | Mochi gen 1 | **current** (Season 1): new eggs get this | [mochi-g1.js](../src/server/genome/mochi-g1.js) |
+| `MO2` | Mochi gen 2 | **current** (Season 1, from Oct 2026): new eggs get this. Same genes as gen 1, but ears are very rare | [mochi-g2.js](../src/server/genome/mochi-g2.js) |
+| `MO1` | Mochi gen 1 | shipped, kept forever (the first Season 1 eggs) | [mochi-g1.js](../src/server/genome/mochi-g1.js) |
 | `SH1` | Shiba gen 1 | shipped, kept forever; ready for a future season | [shiba-g1.js](../src/server/genome/shiba-g1.js) |
 
 Text without a known prefix gets the current one (`daifuku` → `MO1-DAIFUKU`). An `SH1-…` code always decodes to the same Shiba.
@@ -66,7 +67,9 @@ Text without a known prefix gets the current one (`daifuku` → `MO1-DAIFUKU`). 
 | Charm | None 45 · Bow 25 · Ribbon 18 · Bell 12 | Teen |
 | Unique part | Tail: Bunny puff · Curly tail · Crystal tail · Flame tail. Wings: Feather · Bat · Butterfly · Angel. Head: Flower crown · Star antenna · Crystal horns · Unicorn horn | Teen (62%), Adult |
 
-Fine DNA (13 values) includes **squish** and **bounce**: how soft the jelly wobble is and how high it hops. So even twins with the same genes move a little differently. Raising forms: Teen body from the top trait (Strong: soft spikes, Playful: bunny ears, Tough: chubby with a belly, Calm: tall with a leaf) and Adult feature from the second (horns, curly tail, chunky feet, halo).
+**Mochi gen 2** changes only the Top gene's odds: Bare 46 · Antenna 24 · Sprout 18 · Tiny horns 10 · **Bun ears 1 · Cat ears 1**. So about 1 Mochi in 50 has ears, and ears now score 4 rarity points. Gen 1 codes still decode exactly as before (their pets keep their ears). Old v1 saves migrate to `MO1` codes (`codeFromNumber(n, 'MO1')`), never to the current generation.
+
+Fine DNA (13 values) includes **squish** and **bounce**: how soft the jelly wobble is and how high it hops. So even twins with the same genes move a little differently. Raising forms: Teen body from the top trait (Strong: soft spikes, Playful: a bouncy curl on top, Tough: chubby with a belly, Calm: tall with a leaf) and Adult feature from the second (horns, curly tail, chunky feet, halo).
 
 ### Shiba gen 1
 
@@ -107,6 +110,9 @@ Never: reorder `GENES`, remove or reorder alleles, change a weight in a released
 3. Find showcase codes for new rare results with a short loop over `decode()` (try `SH1-0`, `SH1-1`, … until each result appears) and add them to `showcase.js`.
 4. Open `/?lab`, look at the new results at every stage, then at random litters.
 5. Note it in the changelog: "Gen 2: new coat Honey. Gen 1 pets unchanged."
+
+**Changelog**
+- Oct 2026, Mochi gen 2 (`MO2`): ears (Bun ears, Cat ears) are very rare, 1% each. Gen 1 pets unchanged. Art only (all Mochi): the Playful Teen body is a bouncy curl instead of bunny ears ("Boingling", was "Bunbun").
 
 ## 5. Saves
 

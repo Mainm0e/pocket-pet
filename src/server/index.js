@@ -36,7 +36,7 @@ function migrate(db) {
     for (const p of db.pets) {
       if (p.dna && !p.dna.code) {
         const { talent, temperament, quirk, seed } = p.dna;
-        p.dna = { code: codeFromNumber(seed ?? 1), talent, temperament, quirk };
+        p.dna = { code: codeFromNumber(seed ?? 1, 'MO1'), talent, temperament, quirk }; // v1 pets were gen 1
         p.species = decode(p.dna.code).species;
       }
     }

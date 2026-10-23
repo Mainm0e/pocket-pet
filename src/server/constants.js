@@ -62,7 +62,7 @@ export const SEASON = { id: 1, species: 'mochi', name: 'Season 1 · Mochi' };
 // Fallback form names (each species' gene table has its own FORMS).
 export const FORMS = {
   strong: { noun: 'Spikeling', adj: 'Mighty', bodyDesc: 'Soft spikes', featureDesc: 'Little horns' },
-  playful: { noun: 'Bunbun', adj: 'Bouncy', bodyDesc: 'Bunny ears', featureDesc: 'Curly tail' },
+  playful: { noun: 'Boingling', adj: 'Bouncy', bodyDesc: 'A bouncy curl on top', featureDesc: 'Curly tail' },
   tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby with a belly', featureDesc: 'Chunky feet' },
   calm: { noun: 'Sproutling', adj: 'Dreamy', bodyDesc: 'Tall with a leaf', featureDesc: 'Halo' },
 };

@@ -316,7 +316,7 @@ describe('server API', () => {
     const s = createServer({ storage: st, clock: () => T0 });
     const v = (await s.getState()).state.pet;
     expect(v.nickname).toBe('Bobo');
-    expect(v.dna).toMatchObject({ code: codeFromNumber(900917), talent: 'calm', quirk: 'sleepyhead' });
+    expect(v.dna).toMatchObject({ code: codeFromNumber(900917, 'MO1'), talent: 'calm', quirk: 'sleepyhead' });
     expect(v.genome.species).toBe('mochi'); // old 2D Mochi pets become 3D Mochi
     expect(v.bond).toBeGreaterThanOrEqual(BOND.START); // v3: pets get a bond
     expect(v.bondLabel).toBeTruthy();
