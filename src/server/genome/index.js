@@ -9,12 +9,13 @@ import {
 } from './core.js';
 import * as shibaG1 from './shiba-g1.js';
 import * as mochiG1 from './mochi-g1.js';
+import * as mochiG2 from './mochi-g2.js';
 
 /** Every genome table that has ever shipped. Add new ones; never remove or edit old ones. */
-export const GENERATIONS = [shibaG1, mochiG1];
+export const GENERATIONS = [shibaG1, mochiG1, mochiG2];
 const BY_PREFIX = Object.fromEntries(GENERATIONS.map((g) => [`${g.PREFIX}${g.GEN}`, g]));
 /** What new eggs this season are laid with. */
-export const CURRENT = mochiG1;
+export const CURRENT = mochiG2;
 /**
  * Rare species that can turn up in a new egg instead of the current one.
  * The server rolls this once, when it issues the egg's code; after that the code's
@@ -24,7 +25,7 @@ export const SPAWN = [{ table: shibaG1, chance: 1 / 1_000_000 }];
 const SPAWN_TOTAL = SPAWN.reduce((a, s) => a + s.chance, 0);
 /** Chance that a new egg is this species (null for old species that no longer spawn). */
 export function speciesOdds(T) {
-  if (T === CURRENT) return 1 - SPAWN_TOTAL;
+  if (T.SPECIES === CURRENT.SPECIES) return 1 - SPAWN_TOTAL; // older generations of this season's species too
   return SPAWN.find((s) => s.table === T)?.chance ?? null;
 }
 
@@ -75,15 +76,18 @@ export function nudgeCode(code) {
   return `${prefix}-${CODE_ALPHABET[1]}${chars.join('')}`;
 }
 
-/** Deterministic code from any number (used to migrate old saves and for simulated friends). */
-export function codeFromNumber(n) {
+/**
+ * Deterministic code from any number (used to migrate old saves and for simulated friends).
+ * `prefix` pins the generation (old saves must keep decoding to the same pet).
+ */
+export function codeFromNumber(n, prefix = `${CURRENT.PREFIX}${CURRENT.GEN}`) {
   let x = n >>> 0;
   let body = '';
   for (let i = 0; i < 6; i++) {
     body = CODE_ALPHABET[x % 32] + body;
     x = Math.floor(x / 32);
   }
-  return `${CURRENT.PREFIX}${CURRENT.GEN}-${body}`;
+  return `${prefix}-${body}`;
 }
 
 const cache = new Map();

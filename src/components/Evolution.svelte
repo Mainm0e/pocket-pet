@@ -1,5 +1,6 @@
 <script>
   import { game } from '../lib/game.svelte.js';
+  import { sfx } from '../lib/sound.js';
   import PetThumb from './PetThumb.svelte';
   import { lookOf } from '../species/index.js';
   import PetCard from './PetCard.svelte';
@@ -14,10 +15,12 @@
   });
   let phase = $state('glow'); // glow -> flash -> reveal -> card
   $effect(() => {
+    sfx('sparkle');
     const t1 = setTimeout(() => (phase = 'flash'), 2600);
+    const t0 = setTimeout(() => sfx('levelup'), 2500);
     const t2 = setTimeout(() => (phase = 'reveal'), 3000);
     const t3 = setTimeout(() => to === 'adult' && (phase = 'card'), 5200);
-    return () => [t1, t2, t3].forEach(clearTimeout);
+    return () => [t0, t1, t2, t3].forEach(clearTimeout);
   });
   const LINES = { teen: 'is growing up!', adult: 'is all grown up!' };
 </script>

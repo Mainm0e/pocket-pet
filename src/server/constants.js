@@ -20,6 +20,50 @@ export const ADULT_AGE = 3 * DAY;
 export const ADULT_TRAITS = 70;
 
 export const BATTLES_PER_DAY = 5;
+export const MATCH_POINTS = 5; // volleyball: first to 5 wins
+
+// Bond: how close owner and pet are. Decides whether the pet listens in a match.
+export const BOND = {
+  START: 20,
+  DAILY_CAP: 8, // the most bond a day can add: earned slowly, by coming back
+  CARE: 1, // each successful care action
+  PAT: 0.25,
+  PATS_PER_DAY: 8, // pats that count (more are welcome, but don't add)
+  VISIT: 2, // first visit of the day
+  MATCH: 1, // playing a match together, win or lose
+  NEGLECT: 0.3, // lost per hour while care is very low
+  WISH: 3, // granting the daily wish (on top of the daily cap: it only happens once a day)
+};
+
+// The daily wish: one thing the pet wants today. Picked from its code and the date.
+export const WISHES = {
+  feed: { label: 'a yummy snack', ask: "I'm craving a snack!", icon: '🍙' },
+  play: { label: 'to play ball', ask: 'Can we play ball?', icon: '🎾' },
+  bath: { label: 'a bubble bath', ask: 'I want a bubble bath!', icon: '🛁' },
+  train: { label: 'to train together', ask: "Let's get strong!", icon: '🏋️' },
+  pat: { label: 'lots of pats', ask: 'Pat me! Pat me lots!', icon: '🤚' },
+  match: { label: 'a volleyball match', ask: "Let's play volleyball!", icon: '🏐' },
+};
+export const WISH_PATS = 3; // pats needed for the 'pat' wish
+export const GREET_AWAY = 30 * 60_000; // away this long and the pet greets you when you come back
+
+// Reminders (notifications): what the pet will need next, from the same rules that run the game.
+export const REMINDERS = {
+  HOURS: 24, // how far ahead to look
+  PER_DAY: 3, // never more than this
+  QUIET_FROM: 21, // no reminders 21:00..08:00 (they move to 08:00)
+  QUIET_TO: 8,
+  WISH_AT: 18, // "still wishing..." at 18:00 if today's wish isn't granted
+  HUNGRY_AFTER: 8 * 3600_000, // same as the care rules
+  LONELY_BELOW: 35, // happiness
+};
+export const BOND_LEVELS = [
+  [75, 'Best friends'],
+  [50, 'Good friends'],
+  [25, 'Getting close'],
+  [0, 'Still shy of you'],
+];
+export const bondLabel = (b) => BOND_LEVELS.find(([min]) => b >= min)[1];
 export const MAX_CATCHUP = 7 * DAY; // decay stops accumulating after a week away
 export const MAX_POOPS = 4;
 
@@ -28,10 +72,10 @@ export const SEASON = { id: 1, species: 'mochi', name: 'Season 1 · Mochi' };
 // Body shape at Teen (top trait) and feature at Adult (second trait).
 // Fallback form names (each species' gene table has its own FORMS).
 export const FORMS = {
-  strong: { noun: 'Spikeling', adj: 'Mighty', bodyDesc: 'Soft spikes', featureDesc: 'Little horns' },
-  playful: { noun: 'Bunbun', adj: 'Bouncy', bodyDesc: 'Bunny ears', featureDesc: 'Curly tail' },
-  tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby with a belly', featureDesc: 'Chunky feet' },
-  calm: { noun: 'Sproutling', adj: 'Dreamy', bodyDesc: 'Tall with a leaf', featureDesc: 'Halo' },
+  strong: { noun: 'Champling', adj: 'Mighty', bodyDesc: 'Sharp, determined brows', featureDesc: 'Fighting spirit (gets fired up 💢)' },
+  playful: { noun: 'Boingling', adj: 'Bouncy', bodyDesc: 'Happy brows, sparkly eyes', featureDesc: 'Curly tail' },
+  tough: { noun: 'Pudgeling', adj: 'Chunky', bodyDesc: 'Chubby, with puffy cheeks', featureDesc: 'Chunky feet' },
+  calm: { noun: 'Dozeling', adj: 'Dreamy', bodyDesc: 'Tall, with a serene face', featureDesc: 'Halo' },
 };
 
 export const TRAIT_INFO = {
@@ -42,10 +86,10 @@ export const TRAIT_INFO = {
 };
 
 export const TEMPERAMENTS = {
-  bold: { label: 'Bold', desc: '+10% attack in battle' },
-  shy: { label: 'Shy', desc: '+15% defense in battle' },
-  stubborn: { label: 'Stubborn', desc: 'May ignore your cheers when unhappy' },
-  cheerful: { label: 'Cheerful', desc: 'Good-mood battle bonus is doubled' },
+  bold: { label: 'Bold', desc: 'Hits harder, but gets over-excited' },
+  shy: { label: 'Shy', desc: 'Great receives, but gets nervous' },
+  stubborn: { label: 'Stubborn', desc: 'Ignores you more when unhappy' },
+  cheerful: { label: 'Cheerful', desc: 'Good-mood match bonus is doubled' },
 };
 
 export const QUIRKS = {
@@ -64,8 +108,8 @@ export const MUTATIONS = {
 };
 
 export const MARKS = {
-  star: { label: 'Victory star', desc: 'Won its first battle' },
-  scar: { label: 'Rival scar', desc: 'Won 3 battles' },
+  star: { label: 'Victory star', desc: 'Won its first match' },
+  scar: { label: 'Rival scar', desc: 'Won 3 matches' },
   aura: { label: 'Loved aura', desc: 'Grew up to an adult with great care' },
   sun: { label: 'Sunny mark', desc: 'Visited 3 days in a row' },
   rainbow: { label: 'Rainbow mark', desc: 'Visited 7 days in a row' },

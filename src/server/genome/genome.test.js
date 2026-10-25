@@ -16,6 +16,12 @@ const LOCKED = {
   'MO1-MOCHI2': { name: 'Mipami', strand: 'AAAGAAAAAAAAATATATAAAA', print: 'FP-493F15', shape: 'wide', topper: 'strawberry' },
   'MO1-ICHIGO': { name: 'Nupami', strand: 'ACAAAAAGAAATAATAAAAGAA', print: 'FP-5CA8D3', flavor: 'yuzu', topper: 'cherry' },
   'MO1-ZZZZZZ': { name: 'Chichichi', strand: 'TTACAGAAAGAAATAAAAAAAA', print: 'FP-43EFB4', flavor: 'ube', shape: 'drop' },
+  // Mochi gen 2 (a clean head is the norm)
+  'MO2-000001': { name: 'Pakipo', strand: 'ACAGACAGATAATAAAAAAATT', print: 'FP-033A17', flavor: 'yuzu', top: 'none' },
+  'MO2-DAIFUKU': { name: 'Mobopo', strand: 'AGAAATAGAAAGACAAAAACAA', print: 'FP-CFF0A4', flavor: 'matcha', top: 'cat' },
+  'MO2-MOCHI2': { name: 'Komin', strand: 'ATAATAAAAAAAATAAAAAATG', print: 'FP-A26EC6', flavor: 'sakura', top: 'none' },
+  'MO2-ICHIGO': { name: 'Rutan', strand: 'ATACAGAGAAAAATAAAAAATT', print: 'FP-4A08A3', flavor: 'sakura', top: 'none' },
+  'MO2-ZZZZZZ': { name: 'Patako', strand: 'AAAAATATAAAAAATAAAATAA', print: 'FP-4974BB', flavor: 'plain', top: 'none' },
 };
 
 describe('core math is frozen', () => {
@@ -48,10 +54,11 @@ describe('locked seeds', () => {
 
 describe('codes', () => {
   it('normalizes text and adds the current prefix', () => {
-    expect(normalizeCode('  daifuku ')).toBe('MO1-DAIFUKU');
+    expect(normalizeCode('  daifuku ')).toBe('MO2-DAIFUKU');
     expect(normalizeCode('sh1-abc')).toBe('SH1-ABC'); // older species keep their prefix
-    expect(normalizeCode('my mochi')).toBe('MO1-MY-MOCHI');
-    expect(decode('daifuku')).toBe(decode('MO1-DAIFUKU'));
+    expect(normalizeCode('mo1-abc')).toBe('MO1-ABC'); // and older generations theirs
+    expect(normalizeCode('my mochi')).toBe('MO2-MY-MOCHI');
+    expect(decode('daifuku')).toBe(decode('MO2-DAIFUKU'));
     expect(decode('SH1-POCHI').species).toBe('shiba');
   });
   it('nudges past collisions', () => {
@@ -59,9 +66,10 @@ describe('codes', () => {
     expect(nudgeCode('SH1-ABC')).toBe('SH1-ABD');
   });
   it('makes stable codes from numbers', () => {
-    expect(codeFromNumber(1)).toBe('MO1-000001');
+    expect(codeFromNumber(1)).toBe('MO2-000001');
+    expect(codeFromNumber(1, 'MO1')).toBe('MO1-000001'); // old saves stay gen 1
     expect(codeFromNumber(900917)).toBe(codeFromNumber(900917));
-    expect(randomCode()).toMatch(/^MO1-[0-9A-HJKMNP-TV-Z]{6}$/);
+    expect(randomCode()).toMatch(/^MO2-[0-9A-HJKMNP-TV-Z]{6}$/);
   });
   it('decoded DNA is read-only', () => {
     const d = decode('MO1-DAIFUKU');
@@ -96,6 +104,21 @@ describe.each(GENERATIONS.map((T) => [T.PREFIX + T.GEN, T]))('odds match the %s 
   });
 });
 
+describe('Mochi gen 2', () => {
+  it('a clean head is the norm: ears, antenna, sprout, horns and head parts are rare', () => {
+    const N = 20000;
+    const share = (prefix, test) => {
+      let n = 0;
+      for (let i = 0; i < N; i++) if (test(decode(`${prefix}-${codeFromNumber(i * 7919 + 13).split('-')[1]}`))) n++;
+      return n / N;
+    };
+    const grown = (d) => d.genes.top !== 'none' || d.unique.slot === 'head';
+    expect(share('MO2', grown)).toBeLessThan(0.08);
+    expect(share('MO2', (d) => ['nubs', 'cat'].includes(d.genes.top))).toBeLessThan(0.03);
+    expect(share('MO1', (d) => ['nubs', 'cat'].includes(d.genes.top))).toBeGreaterThan(0.35); // gen 1 pets keep theirs
+  });
+});
+
 describe('rare species spawn', () => {
   it('a new egg is a Shiba only 1 in a million times', () => {
     expect(SPAWN[0].table.SPECIES).toBe('shiba');
@@ -103,8 +126,8 @@ describe('rare species spawn', () => {
     let calls = 0;
     // the very first roll decides the species
     expect(randomCode(() => (calls++ === 0 ? 0.0000005 : 0.5))).toMatch(/^SH1-/);
-    expect(randomCode(() => 0.0000011)).toMatch(/^MO1-/);
-    expect(randomCode(() => 0.5)).toMatch(/^MO1-/);
+    expect(randomCode(() => 0.0000011)).toMatch(/^MO2-/);
+    expect(randomCode(() => 0.5)).toMatch(/^MO2-/);
   });
   it('rare species are Legendary and say how rare they are', () => {
     const d = decode('SH1-POCHI');

@@ -25,12 +25,14 @@ Dev URLs: `/?dev` shows the DEV panel (move the game clock forward, reset the sa
 src/server/        THE GAME RULES. The only code that changes game state.
   index.js         async API (createServer): getState, act, startEgg, battle*, saveRoom, dev*; storage + save migration
   pet.js           care decay replayed from timestamps, care actions, traits, evolution, titles, DNA string
-  battle.js        turn-by-turn battle + simulated friends
+  battle.js        1v1 volleyball, one touch per step; mood + Cheer/Calm obeyed by bond; simulated friends
   room.js          room layout: item catalog, limits, bounds, sanitizeRoom()
   dna.js           hatching quiz -> personality (talent/temperament/quirk)
   constants.js     tuning knobs (decay, caps, stage gates, marks, quirks)
   genome/          seed code -> DNA. FROZEN tables per species+generation (see docs/DNA.md)
-src/lib/           api.js (the ONLY door from UI to server), game.svelte.js (reactive UI store)
+src/lib/           api.js (the ONLY door from UI to server), game.svelte.js (reactive UI store),
+                   sound.js (sfx(name) + mute pref) -> synth.js (Web Audio, lazy chunk loaded on first tap),
+                   reminders.js (notifications: forecast -> service worker; lazy)
 src/components/    Svelte 5 UI: Room, sheets, PetCard, Quiz, Evolution, Battle, Decorate, SeedLab, DevPanel
 src/species/       species art, lazy-loaded per species
   <species>/sculpt.js   pure-JS SDF sculpt (runs in sculpt.worker.js; NO Three.js imports)
@@ -38,7 +40,7 @@ src/species/       species art, lazy-loaded per species
   common.js        shared parts (wings, head parts, fx tails, egg, tongue)
   index.js         loadSpecies(id) + lookOf(petView)
 src/three/         Three.js: kit (materials/helpers), sdf (field + Surface Nets mesher),
-                   stage (3D room, motion, care scenes, furniture, decorate mode),
+                   stage (3D room, motion, care scenes, furniture, decorate mode), court (volleyball match),
                    furniture, roomStyles (plain data), viewer (turntable), thumbs (offscreen stills)
 ```
 
@@ -73,9 +75,10 @@ Data flow: UI → `api.*()` → server mutates `db` → returns `{ state, events
   2. Add `species/<id>/sculpt.js` and `build.js`, and register them in `species/index.js`, `sculpt.worker.js` and `sculptClient.js`.
   3. Add showcase codes to `genome/showcase.js`, add the species to `build.test.js`, and update docs/DNA.md.
 - **Gene:** append it to the table, render it in `build.js` (gated by the stage in `shows`), add locked codes, and update docs/DNA.md.
-- **Care action:** add a case in `pet.js act()` (with caps and a refusal rule), a button or furniture hook in `Room.svelte`, and a scene in `stage.js play()`.
+- **Care action:** add a case in `pet.js act()` (with caps and a refusal rule), a button or furniture hook in `Room.svelte`, and a scene in `stage.js play()`. Time its sounds inside the scene with `sound(name, delay)`.
+- **Sound:** add a recipe to `SOUNDS` in `lib/synth.js` and call `sfx(name)` from the UI or `sound(name)` from the stage. Never import `synth.js` statically (it stays out of the main bundle).
 - **Furniture:** add an entry to `ROOM_ITEMS` (server/room.js), then `buildItem` and `RADIUS` (three/furniture.js), the icon in `Decorate.svelte`, and `interact()` and `spotFor()` in stage.js.
-- **Battle or balance changes:** re-simulate win rates (focused builds should stay around 40–60% against each other) and keep `server.test.js` passing.
+- **Volleyball or balance changes:** re-simulate win rates (focused builds should stay around 40–60% against each other; the "focused builds" test in `server.test.js` checks it) and keep the bond meaningful (smart commands at high bond should beat no commands). The court (`three/court.js`) only animates server events; `play()` returns how long they take.
 
 ## Checking your work
 
@@ -96,14 +99,15 @@ Data flow: UI → `api.*()` → server mutates `db` → returns `{ state, events
 - **Shader stalls:** `renderer.debug.checkShaderErrors` is off outside dev (`tuneRenderer`), and new models are compiled with `compileAsync` (`precompile`) to avoid stalls.
 - **Thumbnails** use `toBlob` (async), not `toDataURL`, and render one at a time when scrolled into view (`PetThumb`).
 - **Furniture moves:** furniture positions only change in the stage when the layout value changes, so the toy ball doesn't snap home on every state refresh.
+- **Volleyball court:** `Battle.svelte` fetches one touch ahead, so `court.play(events, onEvent, next)` knows if the ball will be missed (then it lands just out of reach, beside or in front of the receiver, never behind it, or a flat ball flies through the pet). Ball contacts use each pet's measured size. The smoke test checks `window.__court.debug().closest` (1 = touching, below 1 = the ball went inside a pet), and `byPhase` says where.
 - **Service worker:** `public/sw.js` caches the app. Bump `CACHE` when a change must reach installed PWAs.
 
 ## Roadmap (not built yet)
 
 1. **Real backend (Supabase):** move `src/server/*` handlers to Edge Functions, store `db` in Postgres with a unique constraint on `pets.code`, add auth, and keep `lib/api.js` as the only client change.
-2. **Real friends:** friend list, visits ("friends can visit and feed each other's pets"), real battles instead of simulated friends, and friends-only leaderboards.
-3. **Push notifications** ("Your pet is hungry!") through the PWA service worker.
-4. **Sound:** chomp, giggle, squish, hatch and level-up sounds generated with Web Audio, plus a mute toggle.
+2. **Real friends:** friend list, visits ("friends can visit and feed each other's pets"), real volleyball matches instead of simulated friends, and friends-only leaderboards.
+3. **Push notifications:** best effort is done. Reminders (More → 🔔) come from `forecast()` in pet.js; `lib/reminders.js` saves them for `public/sw.js`, which shows what's due when Chrome wakes the installed app (Periodic Background Sync) or while the page is alive in the background. Next: real Web Push from the backend (send the same forecast list; works on iPhone Home Screen apps too).
+4. ~~**Sound**~~ (done): Web Audio sounds for care, hatching, evolving and battles, with a mute toggle in More. Next: optional background music.
 5. **Season 2:** turn Shiba (or Sprout, Ember pup, Puddle or Pebble) into a full season species, with lazy-loaded art.
 6. **Fusion:** two adults make a hybrid egg. Use a new code generation that takes both parents' DNA, and allow one fusion per pet per season.
 7. **Enchant:** materials earned from care and battles buy visual effects and stat *redistribution* (never more total power). Add a rare "awakening" look.

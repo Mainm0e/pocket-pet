@@ -236,6 +236,22 @@ export function particleTex(kind) {
       g.lineTo(44, 16);
       g.stroke();
     },
+    // the anime "anger mark": four popping veins bulging toward the middle
+    anger: (g) => {
+      g.lineCap = 'round';
+      for (const [w, col] of [[13, '#FFFFFF'], [7, '#E8303A']]) {
+        g.lineWidth = w;
+        g.strokeStyle = col;
+        for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+          const cx = 32 + dx * 30;
+          const cy = 32 + dy * 30;
+          const mid = Math.atan2(-dy, -dx); // facing the middle
+          g.beginPath();
+          g.arc(cx, cy, 21, mid - 0.62, mid + 0.62);
+          g.stroke();
+        }
+      }
+    },
     sparkle: (g) => {
       g.fillStyle = '#FFF4B8';
       g.beginPath();

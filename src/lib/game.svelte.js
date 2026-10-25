@@ -1,5 +1,6 @@
 import { api } from './api.js';
 import { MARKS } from '../server/constants.js';
+import { sfx } from './sound.js';
 
 let seq = 0;
 
@@ -13,6 +14,7 @@ class Game {
   sheet = $state(null); // 'stats' | 'card' | 'more'
   battleOpen = $state(false);
   decorating = $state(false);
+  greet = $state(null); // { fx, line }: played by the room once the pet is on screen
 
   get pet() {
     return this.s?.pet ?? null;
@@ -37,18 +39,37 @@ class Game {
         break;
       case 'mark':
         this.showToast(`New memory mark: ${MARKS[e.mark].label}!`);
+        sfx('chime');
         break;
       case 'woke':
         this.say('Good morning!');
+        sfx('wake');
         break;
       case 'crack':
         this.play('wobble');
+        sfx('crack');
         break;
       case 'rareSpecies':
         this.showToast(`Something glows... a 1 in ${Math.round(1 / e.odds).toLocaleString('en')} egg!`);
         break;
+      case 'greet': {
+        const b = e.bond;
+        const [fx, lines] =
+          b >= 75 ? ['greetBest', ["You're back!!", 'I missed you SO much!', 'Yay! Yay! You came back!']]
+          : b >= 50 ? ['greetGood', ['Hi! I missed you!', 'Welcome back!', 'There you are!']]
+          : b >= 25 ? ['greetOk', ['Oh! Hi there.', 'You came back!', 'Hello again!']]
+          : ['greetShy', ['...hi.', '*peeks*', "Oh... it's you."]];
+        this.greet = { fx, line: lines[Math.floor(Math.random() * lines.length)] };
+        break;
+      }
+      case 'wish':
+        this.play('wish', 2500);
+        this.showToast(`Wish granted! ♥ Bond +${e.bond}`);
+        setTimeout(() => this.say(['Thank you!!', 'You remembered!', 'Best day ever!'][Math.floor(Math.random() * 3)], 2400), 300);
+        break;
       case 'hatched':
         this.play('hatch');
+        sfx('hatch');
         if (this.pet?.genome.speciesOdds < 0.001)
           setTimeout(() => this.showToast(`A ${this.pet.genome.speciesLabel}! Only 1 in ${Math.round(1 / this.pet.genome.speciesOdds).toLocaleString('en')} eggs.`), 400);
         setTimeout(() => (this.naming = true), 900);
@@ -63,9 +84,10 @@ class Game {
     setTimeout(() => this.bubble?.id === id && (this.bubble = null), ms);
   }
 
-  play(name, ms = 1100) {
+  /** `mad`: the pet shows its anime angry face (💢) with this scene. */
+  play(name, ms = 1100, mad = false) {
     const id = ++seq;
-    this.fx = { name, id };
+    this.fx = { name, id, mad };
     setTimeout(() => this.fx?.id === id && (this.fx = null), ms);
   }
 
@@ -81,7 +103,8 @@ class Game {
     const r = res.result;
     if (r) {
       if (r.say) this.say(r.say);
-      if (r.fx) this.play(r.fx, r.fx === 'eat' ? 1500 : 1100);
+      if (r.fx) this.play(r.fx, r.fx === 'eat' ? 1500 : 1100, !!r.mad);
+      if (r.ok && (r.fx === 'sleep' || r.fx === 'wake')) sfx(r.fx); // the rest are timed by the 3D stage
     }
     return r;
   }

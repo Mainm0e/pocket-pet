@@ -3,7 +3,8 @@ import { createPersonality } from './dna.js';
 import { decode } from './genome/index.js';
 import {
   HOUR, DAY, CARE_KEYS, CARE_FLOOR, CARE_MAX, TRAITS, TRAIT_CAP, DAILY_TRAIT_GAIN, TALENT_MULT,
-  HATCH_TAPS, TEEN_AGE, TEEN_TRAITS, ADULT_AGE, ADULT_TRAITS, MAX_CATCHUP, MAX_POOPS, FORMS, SEASON,
+  HATCH_TAPS, TEEN_AGE, TEEN_TRAITS, ADULT_AGE, ADULT_TRAITS, MAX_CATCHUP, MAX_POOPS, FORMS, SEASON, BOND,
+  WISHES, WISH_PATS, REMINDERS,
 } from './constants.js';
 
 // ---------- time helpers (player's local day) ----------
@@ -52,7 +53,8 @@ export function newPet({ id, code, answers, now }) {
     form: { top: null, second: null },
     evolvedAt: {},
     battle: { wins: 0, losses: 0, streak: 0, bestStreak: 0, played: 0, seasonWins: 0 },
-    daily: { day: null, traitGain: 0, battles: 0 },
+    bond: BOND.START,
+    daily: freshDaily(null),
     visits: { lastDay: null, streak: 0 },
     lastUpdated: now,
   };
@@ -71,9 +73,22 @@ export function rankTraits(traits, talent) {
   });
 }
 
+export const freshDaily = (day) => ({ day, traitGain: 0, battles: 0, bond: 0, pats: 0, wishDone: false });
+
 function ensureDay(pet, t) {
   const key = dayKey(t);
-  if (pet.daily.day !== key) pet.daily = { day: key, traitGain: 0, battles: 0 };
+  if (pet.daily.day !== key) pet.daily = freshDaily(key);
+}
+
+/** Grow the bond within its daily cap. Returns amount gained. */
+export function gainBond(pet, amount, t) {
+  if (pet.stage === 'egg') return 0;
+  ensureDay(pet, t);
+  const give = Math.min(amount, BOND.DAILY_CAP - pet.daily.bond, 100 - pet.bond);
+  if (give <= 0) return 0;
+  pet.bond += give;
+  pet.daily.bond += give;
+  return give;
 }
 
 /** Grow a trait within the daily gate and the shared total cap. Returns amount gained. */
@@ -88,6 +103,83 @@ export function gainTrait(pet, trait, base, t) {
   pet.traits[trait] += give;
   pet.daily.traitGain += give / mult;
   return give;
+}
+
+// ---------- reminders ----------
+/**
+ * What the pet will need next, worked out by replaying the normal rules forward on a copy
+ * (nothing changes). Returns [{ id, kind, at }] for: hungry, lonely, mess, wish.
+ * Night times move to the morning; at most REMINDERS.PER_DAY.
+ */
+export function forecast(pet, now) {
+  if (pet.stage === 'egg') return [];
+  const R = REMINDERS;
+  const sim = JSON.parse(JSON.stringify(pet));
+  const found = {};
+  const STEP = HOUR / 2;
+  for (let t = now + STEP; t <= now + R.HOURS * HOUR; t += STEP) {
+    catchUp(sim, t);
+    if (!found.hungry && (t - sim.lastFed > R.HUNGRY_AFTER || sim.care.health < 35)) found.hungry = t;
+    if (!found.lonely && !sim.asleep && sim.care.happiness < R.LONELY_BELOW) found.lonely = t;
+    if (!found.mess && sim.poops.length > pet.poops.length) found.mess = t;
+  }
+  // today's wish, if it's still waiting by the evening
+  const day = dayKey(now);
+  const wishDone = pet.daily.day === day && pet.daily.wishDone;
+  const evening = new Date(now);
+  evening.setHours(R.WISH_AT, 0, 0, 0);
+  if (!wishDone && evening.getTime() > now) found.wish = evening.getTime();
+  // quiet hours: move to the next morning
+  const awake = (t) => {
+    const d = new Date(t);
+    const h = d.getHours();
+    if (h >= R.QUIET_FROM || h < R.QUIET_TO) {
+      if (h >= R.QUIET_FROM) d.setDate(d.getDate() + 1);
+      d.setHours(R.QUIET_TO, 0, 0, 0);
+    }
+    return d.getTime();
+  };
+  const out = Object.entries(found)
+    .map(([kind, at]) => ({ kind, at: awake(at) }))
+    .filter((r) => r.at - now >= 15 * 60_000) // the player is here right now anyway
+    .sort((a, b) => a.at - b.at);
+  const perDay = {};
+  return out
+    .filter((r) => (perDay[dayKey(r.at)] = (perDay[dayKey(r.at)] ?? 0) + 1) <= R.PER_DAY)
+    .map((r) => ({ id: `${r.kind}:${dayKey(r.at)}`, ...r }));
+}
+
+// ---------- the daily wish ----------
+/** Today's wish, from the pet's code and the date. Its personality tips the odds. */
+export function wishFor(pet, day) {
+  const q = pet.dna.quirk;
+  const tal = pet.dna.talent;
+  const w = {
+    feed: 2 * (q === 'snack_lover' ? 3 : 1) * (tal === 'tough' ? 1.5 : 1),
+    play: 2 * (tal === 'playful' ? 1.5 : 1),
+    bath: q === 'hates_baths' ? 0 : 1.5 * (tal === 'calm' ? 1.5 : 1) * (q === 'neat_freak' ? 1.5 : 1),
+    train: 1.5 * (tal === 'strong' ? 1.5 : 1),
+    pat: 2,
+    match: 1.5,
+  };
+  const keys = Object.keys(WISHES);
+  const total = keys.reduce((s, k) => s + w[k], 0);
+  let r = mulberry32(hashString(`wish:${pet.dna.code}:${day}`))() * total;
+  for (const k of keys) if ((r -= w[k]) < 0) return k;
+  return 'pat';
+}
+
+/** The player did `did` (an action that worked). Grants today's wish if that was it. */
+export function grantWish(pet, did, t) {
+  if (pet.stage === 'egg') return [];
+  ensureDay(pet, t);
+  const kind = wishFor(pet, pet.daily.day);
+  if (pet.daily.wishDone || kind !== did) return [];
+  if (kind === 'pat' && pet.daily.pats < WISH_PATS) return [];
+  pet.daily.wishDone = true;
+  pet.bond = Math.min(100, pet.bond + BOND.WISH);
+  pet.care.happiness = Math.min(CARE_MAX, pet.care.happiness + 5);
+  return [{ type: 'wish', kind, bond: BOND.WISH }];
 }
 
 // ---------- care ----------
@@ -143,6 +235,8 @@ function step(pet, t, h, events) {
     else pet.nextPoopAt = t + 3 * HOUR;
   }
 
+  // A neglected pet slowly drifts away from you.
+  if (careAvg(pet) < 35) pet.bond = Math.max(0, pet.bond - BOND.NEGLECT * h);
   clampCare(pet);
   // Colour vividness follows care quality slowly (~2 day time constant).
   pet.vivid = clamp(pet.vivid + (careAvg(pet) / 100 - pet.vivid) * Math.min(1, h / 48), 0, 1);
@@ -173,6 +267,7 @@ export function recordVisit(pet, now) {
   if (pet.visits.lastDay === key) return events;
   pet.visits.streak = pet.visits.lastDay === dayKey(now - DAY) ? pet.visits.streak + 1 : 1;
   pet.visits.lastDay = key;
+  gainBond(pet, BOND.VISIT, now);
   if (pet.visits.streak >= 3) addMark(pet, 'sun', events);
   if (pet.visits.streak >= 7) addMark(pet, 'rainbow', events);
   return events;
@@ -248,16 +343,25 @@ export function moodModifier(pet) {
   return +m.toFixed(3);
 }
 
-export function battleStats(pet) {
+/** Volleyball stats. Every trait helps one skill, and the shared trait cap keeps pets even. */
+export function playStats(pet) {
   const t = pet.traits;
   const mood = 1 + moodModifier(pet);
   const temp = pet.dna.temperament;
+  const r = (x) => +(x * mood).toFixed(1);
   return {
-    hp: Math.round(100 + t.tough * 1.15 + t.calm * 0.5),
-    atk: +((14 + t.strong * 0.2 + t.playful * 0.1) * (temp === 'bold' ? 1.1 : 1) * mood).toFixed(1),
-    def: +((10 + t.calm * 0.26 + t.tough * 0.05) * (temp === 'shy' ? 1.15 : 1) * mood).toFixed(1),
-    spd: +(10 + t.playful * 0.3 + t.strong * 0.03).toFixed(1),
+    power: r((10 + t.strong * 0.5 + t.playful * 0.1) * (temp === 'bold' ? 1.1 : 1)),
+    speed: r(10 + t.playful * 0.5 + t.strong * 0.1),
+    receive: r((10 + t.tough * 0.5 + t.calm * 0.1) * (temp === 'shy' ? 1.25 : 1)),
+    focus: r(10 + t.calm * 0.5 + t.tough * 0.1),
   };
+}
+
+/** How likely the pet is to listen to Cheer / Calm: mostly the bond. */
+export function obeyChance(pet) {
+  let p = 0.25 + (0.7 * pet.bond) / 100;
+  if (pet.dna.temperament === 'stubborn' && pet.care.happiness < 40) p *= 0.6;
+  return +clamp(p, 0.1, 0.95).toFixed(2);
 }
 
 // ---------- care actions ----------
@@ -276,7 +380,7 @@ export function act(pet, action, arg, now) {
       if (pet.feedLog.length >= 3) {
         c.health -= 4;
         c.happiness -= 2;
-        res = { ok: false, say: 'Too full...', fx: 'refuse' };
+        res = { ok: false, say: 'Too full...', fx: 'refuse', mad: true };
         break;
       }
       c.health += 10;
@@ -320,7 +424,7 @@ export function act(pet, action, arg, now) {
       const hates = q === 'hates_baths';
       c.happiness += hates ? -8 : 4;
       const g = gainTrait(pet, 'calm', 2, now);
-      res = { ok: true, say: hates ? 'Hmph! I hate baths!' : 'Bubbles!', fx: 'bath', gain: { calm: g } };
+      res = { ok: true, say: hates ? 'Hmph! I hate baths!' : 'Bubbles!', fx: 'bath', gain: { calm: g }, mad: hates };
       break;
     }
     case 'sleep': {
@@ -330,7 +434,7 @@ export function act(pet, action, arg, now) {
         pet.wokeAt = now;
         if (c.energy < 50) {
           c.happiness -= 5;
-          res = { ok: true, say: 'Five more minutes...', fx: 'wake' };
+          res = { ok: true, say: 'Five more minutes...', fx: 'wake', mad: true };
         } else res = { ok: true, say: 'Good morning!', fx: 'wake' };
         break;
       }
@@ -339,6 +443,15 @@ export function act(pet, action, arg, now) {
       pet.sleepStart = now;
       res = { ok: true, say: 'Zzz...', fx: 'sleep' };
       break;
+    }
+    case 'pat': {
+      if (pet.asleep) return sleepingReply;
+      if (pet.daily.pats >= BOND.PATS_PER_DAY) return { ok: true };
+      pet.daily.pats++;
+      c.happiness += 1;
+      clampCare(pet);
+      gainBond(pet, BOND.PAT, now);
+      return { ok: true };
     }
     case 'clean': {
       const i = pet.poops.findIndex((p) => p.id === arg);
@@ -354,6 +467,7 @@ export function act(pet, action, arg, now) {
       return { ok: false };
   }
   clampCare(pet);
+  if (res.ok && res.fx !== 'wake') gainBond(pet, BOND.CARE, now); // (sleep/wake toggling shouldn't farm it)
   return res;
 }
 
@@ -365,6 +479,6 @@ export function hatchTap(pet, now) {
   pet.hatchedAt = now;
   pet.lastUpdated = now;
   pet.lastFed = now;
-  pet.daily = { day: dayKey(now), traitGain: 0, battles: 0 };
+  pet.daily = freshDaily(dayKey(now));
   return { events: [{ type: 'hatched' }, ...recordVisit(pet, now)] };
 }

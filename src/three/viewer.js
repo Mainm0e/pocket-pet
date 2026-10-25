@@ -74,7 +74,8 @@ export async function createViewer(canvas, { spin = true, yaw = 0.25 } = {}) {
   frame();
 
   return {
-    async setLook(look) {
+    /** `face`: 'mad' shows the anime angry face (for the Seed Lab). */
+    async setLook(look, { face } = {}) {
       const mine = ++token;
       const { buildPet } = await loadSpecies(look.genome.species);
       const next = await buildPet(look);
@@ -86,6 +87,7 @@ export async function createViewer(canvas, { spin = true, yaw = 0.25 } = {}) {
         disposeTree(model.root);
       }
       model = next;
+      if (face) model.parts.setExpression?.(face);
       scene.add(model.root);
       controls.target.set(0, model.parts.headY * 0.75, 0);
     },

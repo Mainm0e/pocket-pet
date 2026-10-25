@@ -1,5 +1,5 @@
 <script>
-  import { TRAIT_INFO, TRAITS } from '../server/constants.js';
+  import { TRAIT_INFO, TRAITS, BOND } from '../server/constants.js';
   let { pet } = $props();
   const CARE = [
     ['happiness', 'Happiness', '#ff6b8a'],
@@ -57,12 +57,26 @@
 {/if}
 
 <section>
-  <h3>Battle power <small>mood {pet.mood >= 0 ? '+' : ''}{Math.round(pet.mood * 100)}%</small></h3>
+  <h3>Bond <small>{pet.bondLabel}</small></h3>
+  <div class="row">
+    <span class="label">♥ Bond</span>
+    <span class="bar"><i style="width:{pet.bond}%; background:#ff6b9a"></i></span>
+    <span class="num">{Math.floor(pet.bond)}</span>
+  </div>
+  <p class="hint">
+    Listens to you in matches about {Math.round(pet.obey * 100)}% of the time.
+    Grows with daily care, pats, visits and playing together (up to {BOND.DAILY_CAP} a day), and fades if your pet is neglected.
+  </p>
+</section>
+
+<section>
+  <h3>Volleyball <small>mood {pet.mood >= 0 ? '+' : ''}{Math.round(pet.mood * 100)}%</small></h3>
   <div class="bstats">
-    {#each [['HP', 'hp'], ['ATK', 'atk'], ['DEF', 'def'], ['SPD', 'spd']] as [l, k]}
-      <div><small>{l}</small><b>{Math.round(pet.battleStats[k])}</b></div>
+    {#each [['Power', 'power'], ['Speed', 'speed'], ['Receive', 'receive'], ['Focus', 'focus']] as [l, k]}
+      <div><small>{l}</small><b>{Math.round(pet.playStats[k])}</b></div>
     {/each}
   </div>
+  <p class="hint">Power from Strong, Speed from Playful, Receive from Tough, Focus from Calm.</p>
 </section>
 
 <style>

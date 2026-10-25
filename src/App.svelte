@@ -4,18 +4,30 @@
   import Quiz from './components/Quiz.svelte';
   import Naming from './components/Naming.svelte';
   import Evolution from './components/Evolution.svelte';
-  import Battle from './components/Battle.svelte';
   import DevPanel from './components/DevPanel.svelte';
   import SeedLab from './components/SeedLab.svelte';
 
   const params = new URLSearchParams(location.search);
   const dev = params.has('dev');
+  const remindersMaybeOn = () => {
+    try {
+      return localStorage.getItem('pocketpet.reminders') === '1';
+    } catch {
+      return false;
+    }
+  };
   const lab = params.has('lab') || params.has('gallery');
   game.load();
 
   // Re-sync when the player comes back; the server works out what happened meanwhile.
   $effect(() => {
-    const onVis = () => document.visibilityState === 'visible' && game.load();
+    const onVis = () => {
+      if (document.visibilityState === 'visible') {
+        game.load();
+        if (remindersMaybeOn()) import('./lib/reminders.js').then((m) => m.onShow());
+      } else if (remindersMaybeOn()) import('./lib/reminders.js').then((m) => m.onHide()); // leaving: hand the next reminders to the service worker
+    };
+    if (dev) window.__reminders = () => import('./lib/reminders.js').then((m) => m.devTools); // for tests
     document.addEventListener('visibilitychange', onVis);
     const iv = setInterval(() => document.visibilityState === 'visible' && game.load(), 60_000);
     return () => {
@@ -37,7 +49,10 @@
 
 {#if game.naming}<Naming />{/if}
 {#if game.evolution && game.pet}<Evolution />{/if}
-{#if game.battleOpen && game.pet}<Battle />{/if}
+{#if game.battleOpen && game.pet}
+  <!-- the match screen loads on demand -->
+  {#await import('./components/Battle.svelte') then { default: Battle }}<Battle />{/await}
+{/if}
 {#if dev}<DevPanel />{/if}
 
 <style>
