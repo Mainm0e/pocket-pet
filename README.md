@@ -5,6 +5,9 @@ raise it in its little 3D room, and watch how you care for it shape its body,
 features, colours and personality. The DNA system is documented in
 [docs/DNA.md](docs/DNA.md).
 
+For a visual tour, gameplay and architecture reference, see the
+[Pocket Pet project guide](docs/PROJECT_GUIDE.md).
+
 ## Run it
 
 ```bash

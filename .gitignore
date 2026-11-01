@@ -2,4 +2,6 @@ node_modules
 dist
 *.local
 screenshots/
+!docs/screenshots/
+!docs/screenshots/*.png
 .DS_Store

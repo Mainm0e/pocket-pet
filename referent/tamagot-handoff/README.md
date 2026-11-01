@@ -48,12 +48,7 @@ tamagot-handoff/
 - **Genome tests:** `npm test` (or `node tests/genome.test.js`, no dependencies).
 - **Render check:** `npm install`, then `npm run render-check -- [path-to-chromium]`. It must print `page errors: none` and saves fresh screenshots.
 
-## Live versions (owner's private claude.ai artifacts)
-
-- Web app: [private artifact link removed]
-- Design canvas: [private artifact link removed]
-
-The copies in this folder match those as of 2026-10-18. `app/index.html` here is a standalone version: the same code wrapped in a full `<html><head><body>` page.
+The copies in this folder match the project as of 2026-10-18. `app/index.html` here is a standalone version: the same code wrapped in a full `<html><head><body>` page.
 
 ## Try these seeds
 
